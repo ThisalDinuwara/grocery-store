@@ -19,6 +19,8 @@ if(!isset($user_id)){
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>about</title>
+    <!-- Tailwind CDN (optional for live preview) -->
+   <script src="https://cdn.tailwindcss.com"></script>
 
    <!-- font awesome cdn link  -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">

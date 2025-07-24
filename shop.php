@@ -84,6 +84,9 @@ if(isset($_POST['add_to_cart'])){
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>shop</title>
 
+   <!-- Tailwind CDN (optional for live preview) -->
+   <script src="https://cdn.tailwindcss.com"></script>
+
    <!-- font awesome cdn link  -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 
@@ -116,19 +119,19 @@ if(isset($_POST['add_to_cart'])){
       if($select_products->rowCount() > 0){
          while($fetch_products = $select_products->fetch(PDO::FETCH_ASSOC)){ 
    ?>
-   <form action="" class="box" method="POST">
-      <div class="price">$<span><?= $fetch_products['price']; ?></span>/-</div>
-      <a href="view_page.php?pid=<?= $fetch_products['id']; ?>" class="fas fa-eye"></a>
-      <img src="uploaded_img/<?= $fetch_products['image']; ?>" alt="">
-      <div class="name"><?= $fetch_products['name']; ?></div>
-      <input type="hidden" name="pid" value="<?= $fetch_products['id']; ?>">
-      <input type="hidden" name="p_name" value="<?= $fetch_products['name']; ?>">
-      <input type="hidden" name="p_price" value="<?= $fetch_products['price']; ?>">
-      <input type="hidden" name="p_image" value="<?= $fetch_products['image']; ?>">
-      <input type="number" min="1" value="1" name="p_qty" class="qty">
-      <input type="submit" value="add to wishlist" class="option-btn" name="add_to_wishlist">
-      <input type="submit" value="add to cart" class="btn" name="add_to_cart">
-   </form>
+   <form action="" class="box p-6 rounded shadow bg-white text-center relative" method="POST">
+         <div class="price absolute top-4 left-4 bg-red-600 text-white px-4 py-2 rounded text-lg">Rs<span><?= $fetch_products['price']; ?></span>/-</div>
+         <a href="view_page.php?pid=<?= $fetch_products['id']; ?>" class="fas fa-eye absolute top-4 right-4 p-2 border rounded text-black bg-white hover:bg-black hover:text-white"></a>
+         <img src="uploaded_img/<?= $fetch_products['image']; ?>" alt="" class="w-full mb-4">
+         <div class="name text-xl text-black py-2"><?= $fetch_products['name']; ?></div>
+         <input type="hidden" name="pid" value="<?= $fetch_products['id']; ?>">
+         <input type="hidden" name="p_name" value="<?= $fetch_products['name']; ?>">
+         <input type="hidden" name="p_price" value="<?= $fetch_products['price']; ?>">
+         <input type="hidden" name="p_image" value="<?= $fetch_products['image']; ?>">
+         <input type="number" min="1" value="1" name="p_qty" class="qty mt-2 block w-full p-3 text-lg border rounded">
+        <!-- <input type="submit" value="add to wishlist" class="option-btn bg-yellow-500 text-white hover:bg-black rounded mt-2 p-3 text-lg w-full" name="add_to_wishlist">-->
+         <input type="submit" value="add to cart" class="btn bg-green-600 text-white hover:bg-black rounded mt-4 p-3 text-lg w-full" name="add_to_cart">
+      </form>
    <?php
       }
    }else{

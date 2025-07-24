@@ -54,7 +54,7 @@
    border:var(--border);
    background-color: var(--white);
    box-shadow: var(--box-shadow);
-   border-radius: .5rem;
+   border-radius: .20rem;
 }
 
 .home-category .box-container .box img{
