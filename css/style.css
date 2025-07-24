@@ -1,7 +1,5 @@
 @import url('components.css');
-body{
-   color: aquamarine;
-}
+
 .home-bg{
    background: url(../images/pic-1.png) no-repeat;
    background-size: cover;

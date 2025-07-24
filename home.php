@@ -91,7 +91,7 @@ if(isset($_POST['add_to_cart'])){
    <link rel="stylesheet" href="css/style.css">
 
 </head>
-<body style="color:blue;">
+<body >
    
 <?php include 'header.php'; ?>
 
@@ -125,23 +125,23 @@ if(isset($_POST['add_to_cart'])){
 
       <div class="box">
          <img src="images/clothes.png" alt="">
-         <h3>meat</h3>
+         <h3>clothes</h3>
          <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Exercitationem, quaerat.</p>
-         <a href="category.php?category=meat" class="btn">meat</a>
+         <a href="category.php?category=meat" class="btn">clothes</a>
       </div>
 
       <div class="box">
-         <img src="images/cat-3.png" alt="">
-         <h3>vegitables</h3>
+         <img src="images/wallarts.png" alt="">
+         <h3>wallarts</h3>
          <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Exercitationem, quaerat.</p>
-         <a href="category.php?category=vegitables" class="btn">vegitables</a>
+         <a href="category.php?category=vegitables" class="btn">wallarts</a>
       </div>
 
       <div class="box">
-         <img src="images/cat-4.png" alt="">
-         <h3>fish</h3>
+         <img src="images/brass.png" alt="">
+         <h3>brass</h3>
          <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Exercitationem, quaerat.</p>
-         <a href="category.php?category=fish" class="btn">fish</a>
+         <a href="category.php?category=fish" class="btn">brass</a>
       </div>
 
    </div>
