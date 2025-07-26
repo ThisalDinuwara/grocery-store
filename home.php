@@ -250,8 +250,8 @@ if(isset($_POST['add_to_cart'])){
 <div class="home-bg bg-cover bg-center">
    <section class="home flex items-center min-h-[60vh]">
       <div class="content w-[50rem]">
-         <h3 class="text-3xl text-black uppercase mt-4" style="color: white; margin:5px;">Discover the Beauty of Traditional Crafts</h3>
-         <p class="text-lg text-gray-600 py-4 leading-7" style="color: wheat;">Explore our exquisite collection of handmade treasures, where every piece tells a story of Sri Lankan heritage and craftsmanship passed down through generations.</p>
+         <!--<h3 class="text-3xl text-black uppercase mt-4" style="color: white; margin:5px;">Discover the Beauty of Traditional Crafts</h3>-->
+         <!--<p class="text-lg text-gray-600 py-4 leading-7" style="color: wheat;">Explore our exquisite collection of handmade treasures, where every piece tells a story of Sri Lankan heritage and craftsmanship passed down through generations.</p>-->
          <a href="about.php" class="btn inline-block w-auto">about us</a>
       </div>
    </section>
