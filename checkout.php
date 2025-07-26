@@ -144,7 +144,7 @@ if(isset($_POST['order'])){
          </div>
          <div class="inputBox">
             <span>country :</span>
-            <input type="text" name="country" placeholder="e.g. India" class="box" required>
+            <input type="text" name="country" placeholder="e.g. sri lanka" class="box" required>
          </div>
          <div class="inputBox">
             <span>pin code :</span>

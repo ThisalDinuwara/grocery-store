@@ -43,15 +43,44 @@ if(!isset($user_id)){
       .floating-mask {
          position: absolute;
          width: 100px;
-         opacity: 0.12;
-         animation: floatRotate 18s ease-in-out infinite;
+         opacity: 0.5;
+         animation: floatRotate 20s ease-in-out infinite;
       }
 
-      .floating-mask:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
-      .floating-mask:nth-child(2) { top: 30%; left: 25%; animation-delay: 4s; }
-      .floating-mask:nth-child(3) { top: 60%; left: 70%; animation-delay: 2s; }
-      .floating-mask:nth-child(4) { top: 80%; left: 45%; animation-delay: 6s; }
-      .floating-mask:nth-child(5) { top: 40%; left: 80%; animation-delay: 1s; }
+      /* Row 1 - Top */
+      .floating-mask:nth-child(1) { top: 2%; left: 8%; animation-delay: 0s; width: 80px; }
+      .floating-mask:nth-child(2) { top: 5%; left: 25%; animation-delay: 2s; width: 90px; }
+      .floating-mask:nth-child(3) { top: 3%; left: 45%; animation-delay: 4s; width: 85px; }
+      .floating-mask:nth-child(4) { top: 7%; left: 65%; animation-delay: 1s; width: 95px; }
+      .floating-mask:nth-child(5) { top: 4%; left: 85%; animation-delay: 3s; width: 75px; }
+
+      /* Row 2 - Upper Middle */
+      .floating-mask:nth-child(6) { top: 20%; left: 5%; animation-delay: 5s; width: 85px; }
+      .floating-mask:nth-child(7) { top: 18%; left: 22%; animation-delay: 1.5s; width: 90px; }
+      .floating-mask:nth-child(8) { top: 22%; left: 42%; animation-delay: 3.5s; width: 80px; }
+      .floating-mask:nth-child(9) { top: 19%; left: 62%; animation-delay: 6s; width: 95px; }
+      .floating-mask:nth-child(10) { top: 24%; left: 82%; animation-delay: 0.5s; width: 75px; }
+
+      /* Row 3 - Middle */
+      .floating-mask:nth-child(11) { top: 38%; left: 10%; animation-delay: 2.5s; width: 90px; }
+      .floating-mask:nth-child(12) { top: 35%; left: 30%; animation-delay: 4.5s; width: 85px; }
+      .floating-mask:nth-child(13) { top: 40%; left: 50%; animation-delay: 1.2s; width: 100px; }
+      .floating-mask:nth-child(14) { top: 37%; left: 70%; animation-delay: 5.5s; width: 80px; }
+      .floating-mask:nth-child(15) { top: 42%; left: 88%; animation-delay: 3.2s; width: 95px; }
+
+      /* Row 4 - Lower Middle */
+      .floating-mask:nth-child(16) { top: 58%; left: 3%; animation-delay: 6.5s; width: 85px; }
+      .floating-mask:nth-child(17) { top: 55%; left: 25%; animation-delay: 2.8s; width: 90px; }
+      .floating-mask:nth-child(18) { top: 60%; left: 45%; animation-delay: 4.8s; width: 75px; }
+      .floating-mask:nth-child(19) { top: 57%; left: 67%; animation-delay: 1.8s; width: 95px; }
+      .floating-mask:nth-child(20) { top: 62%; left: 85%; animation-delay: 5.8s; width: 80px; }
+
+      /* Row 5 - Bottom */
+      .floating-mask:nth-child(21) { top: 78%; left: 12%; animation-delay: 3.8s; width: 90px; }
+      .floating-mask:nth-child(22) { top: 75%; left: 32%; animation-delay: 6.2s; width: 85px; }
+      .floating-mask:nth-child(23) { top: 80%; left: 52%; animation-delay: 2.2s; width: 95px; }
+      .floating-mask:nth-child(24) { top: 77%; left: 72%; animation-delay: 4.2s; width: 80px; }
+      .floating-mask:nth-child(25) { top: 82%; left: 90%; animation-delay: 1.5s; width: 75px; }
 
       @keyframes floatRotate {
          0%   { transform: translateY(0px) rotate(0deg); }
@@ -68,11 +97,32 @@ if(!isset($user_id)){
 <div class="relative w-full h-[100vh] overflow-hidden">
    <!-- Floating devil mask background (covers whole visible area) -->
    <div class="floating-bg">
-      <img src="images/devil-mask1.png" class="floating-mask" alt="mask">
-      <img src="images/devil-mask2.png" class="floating-mask" alt="mask">
-      <img src="images/devil-mask1.png" class="floating-mask" alt="mask">
-      <img src="images/devil-mask2.png" class="floating-mask" alt="mask">
-      <img src="images/devil-mask1.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      <img src="images/mask8.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      <img src="images/mask8.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      <img src="images/mask8.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+       <img src="images/mask8.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      <img src="images/mask8.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      <img src="images/mask8.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      <img src="images/mask8.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      <img src="images/mask8.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      <img src="images/mask8.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      <img src="images/mask8.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      <img src="images/mask8.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      <img src="images/mask8.png" class="floating-mask" alt="mask">
+      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      
    </div>
 
    <!-- ABOUT CONTENT -->
@@ -94,6 +144,8 @@ if(!isset($user_id)){
       </div>
    </section>
 </div>
+<br>
+<br>
 
 <!-- ======================== -->
 <!-- CLIENT REVIEWS BELOW (No animation) -->
