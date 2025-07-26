@@ -76,6 +76,172 @@ if(isset($_POST['add_to_cart'])){
 
    <!-- Custom CSS -->
    <link rel="stylesheet" href="css/style.css">
+   
+   <style>
+      /* Custom styles for single row layout */
+      .single-row-container {
+         display: grid;
+         grid-template-columns: repeat(4, 1fr);
+         gap: 2rem;
+         max-width: 1400px;
+         margin: 0 auto;
+         padding: 0 1rem;
+      }
+      
+      @media (max-width: 1024px) {
+         .single-row-container {
+            grid-template-columns: repeat(2, 1fr);
+         }
+      }
+      
+      @media (max-width: 640px) {
+         .single-row-container {
+            grid-template-columns: 1fr;
+         }
+      }
+      
+      .category-box {
+         transition: all 0.4s ease;
+         opacity: 0;
+         transform: translateY(30px);
+         animation: fadeInUp 0.8s ease forwards;
+         position: relative;
+         overflow: hidden;
+      }
+      
+      /* Animated border frame */
+      .category-box::before {
+         content: '';
+         position: absolute;
+         top: 0;
+         left: 0;
+         right: 0;
+         bottom: 0;
+         border: 3px solid transparent;
+         border-radius: 8px;
+         background: linear-gradient(45deg, #4CAF50, #45a049, #66bb6a, #4CAF50) border-box;
+         -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+         -webkit-mask-composite: xor;
+         mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+         mask-composite: exclude;
+         animation: rotateBorder 3s linear infinite;
+         opacity: 0;
+         transition: opacity 0.3s ease;
+      }
+      
+      .category-box:hover::before {
+         opacity: 1;
+      }
+      
+      /* Animated corner frames */
+      .category-box::after {
+         content: '';
+         position: absolute;
+         top: 10px;
+         left: 10px;
+         right: 10px;
+         bottom: 10px;
+         border: 2px dashed #4CAF50;
+         border-radius: 6px;
+         animation: dashRotate 4s linear infinite reverse;
+         opacity: 0;
+         transition: opacity 0.3s ease;
+      }
+      
+      .category-box:hover::after {
+         opacity: 0.6;
+      }
+      
+      .category-box:nth-child(1) { animation-delay: 0.1s; }
+      .category-box:nth-child(2) { animation-delay: 0.2s; }
+      .category-box:nth-child(3) { animation-delay: 0.3s; }
+      .category-box:nth-child(4) { animation-delay: 0.4s; }
+      
+      .category-box:hover {
+         transform: translateY(-10px) scale(1.05);
+         box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      }
+      
+      .category-box img {
+         transition: transform 0.3s ease;
+         position: relative;
+         z-index: 1;
+      }
+      
+      .category-box:hover img {
+         transform: scale(1.1);
+      }
+      
+      .category-box .btn {
+         transition: all 0.3s ease;
+         position: relative;
+         overflow: hidden;
+         z-index: 2;
+      }
+      
+      .category-box .btn::before {
+         content: '';
+         position: absolute;
+         top: 0;
+         left: -100%;
+         width: 100%;
+         height: 100%;
+         background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+         transition: left 0.5s ease;
+      }
+      
+      .category-box:hover .btn::before {
+         left: 100%;
+      }
+      
+      @keyframes fadeInUp {
+         from {
+            opacity: 0;
+            transform: translateY(30px);
+         }
+         to {
+            opacity: 1;
+            transform: translateY(0);
+         }
+      }
+      
+      @keyframes rotateBorder {
+         0% {
+            background: linear-gradient(45deg, #4CAF50, #45a049, #66bb6a, #4CAF50) border-box;
+         }
+         25% {
+            background: linear-gradient(135deg, #45a049, #66bb6a, #4CAF50, #81c784) border-box;
+         }
+         50% {
+            background: linear-gradient(225deg, #66bb6a, #4CAF50, #81c784, #45a049) border-box;
+         }
+         75% {
+            background: linear-gradient(315deg, #4CAF50, #81c784, #45a049, #66bb6a) border-box;
+         }
+         100% {
+            background: linear-gradient(45deg, #4CAF50, #45a049, #66bb6a, #4CAF50) border-box;
+         }
+      }
+      
+      @keyframes dashRotate {
+         0% {
+            transform: rotate(0deg);
+         }
+         100% {
+            transform: rotate(360deg);
+         }
+      }
+      
+      @keyframes pulse {
+         0% { transform: scale(1); }
+         50% { transform: scale(1.02); }
+         100% { transform: scale(1); }
+      }
+      
+      .title {
+         animation: fadeInUp 0.6s ease forwards;
+      }
+   </style>
 </head>
 <body >
 
@@ -91,32 +257,32 @@ if(isset($_POST['add_to_cart'])){
    </section>
 </div>
 
-<section class="home-category pb-0 ">
-   <h1 class="title text-4xl uppercase text-center mb-8">shop by category</h1>
-   <div class="box-container grid gap-6 justify-center">
-      <div class="box p-6 rounded shadow bg-white text-center">
-         <img src="images/woods.png" alt="">
-         <h3 class="text-xl uppercase text-black py-2">wood</h3>
-         <p class="text-sm text-gray-600 leading-6">Fresh and seasonal organic fruits from trusted growers.</p>
-         <a href="category.php?category=fruits" class="btn">wood</a>
+<section class="home-category pb-0">
+   <h1 class="title text-5xl uppercase text-center mb-8 font-bold">shop by category</h1>
+   <div class="single-row-container">
+      <div class="category-box p-8 rounded shadow bg-white text-center">
+         <img src="images/WhatsApp Image 2025-07-04 at 16.08.43_3a17b7c3.jpg" alt="" class="w-full h-56 object-cover rounded mb-6">
+         <h3 class="text-3xl font-semibold uppercase text-black py-3">wood</h3>
+         <p class="text-lg text-gray-600 leading-7 mb-6">Fresh and seasonal organic fruits from trusted growers.</p>
+         <a href="category.php?category=fruits" class="btn text-lg font-medium">wood</a>
       </div>
-      <div class="box p-6 rounded shadow bg-white text-center">
-         <img src="images/clothes.png" alt="">
-         <h3 class="text-xl uppercase text-black py-2">clothes</h3>
-         <p class="text-sm text-gray-600 leading-6">High-quality, ethically sourced meat products.</p>
-         <a href="category.php?category=meat" class="btn">clothes</a>
+      <div class="category-box p-8 rounded shadow bg-white text-center">
+         <img src="images/clothes1.jpg" alt="" class="w-full h-56 object-cover rounded mb-6">
+         <h3 class="text-3xl font-semibold uppercase text-black py-3">clothes</h3>
+         <p class="text-lg text-gray-600 leading-7 mb-6">High-quality, ethically sourced meat products.</p>
+         <a href="category.php?category=meat" class="btn text-lg font-medium">clothes</a>
       </div>
-      <div class="box p-6 rounded shadow bg-white text-center">
-         <img src="images/wallarts.png" alt="">
-         <h3 class="text-xl uppercase text-black py-2">wallarts</h3>
-         <p class="text-sm text-gray-600 leading-6">Locally grown vegetables with natural freshness.</p>
-         <a href="category.php?category=vegitables" class="btn">wallarts</a>
+      <div class="category-box p-8 rounded shadow bg-white text-center">
+         <img src="images/wallart.jpg" alt="" class="w-full h-56 object-cover rounded mb-6">
+         <h3 class="text-3xl font-semibold uppercase text-black py-3">wallarts</h3>
+         <p class="text-lg text-gray-600 leading-7 mb-6">Locally grown vegetables with natural freshness.</p>
+         <a href="category.php?category=vegitables" class="btn text-lg font-medium">wallarts</a>
       </div>
-      <div class="box p-6 rounded shadow bg-white text-center" >
-         <img src="images/brass.png" alt="">
-         <h3 class="text-xl uppercase text-black py-2">brass</h3>
-         <p class="text-sm text-gray-600 leading-6">Catch of the day, fresh from local fishermen.</p>
-         <a href="category.php?category=fish" class="btn">brass</a>
+      <div class="category-box p-8 rounded shadow bg-white text-center">
+         <img src="images/jewellery.jpg" alt="" class="w-full h-56 object-cover rounded mb-6">
+         <h3 class="text-3xl font-semibold uppercase text-black py-3">jewellery</h3>
+         <p class="text-lg text-gray-600 leading-7 mb-6">Catch of the day, fresh from local fishermen.</p>
+         <a href="category.php?category=fish" class="btn text-lg font-medium">brass</a>
       </div>
    </div>
 </section>

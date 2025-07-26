@@ -13,11 +13,28 @@ if(isset($message)){
 
 ?>
 
+<style>
+/* Logo styling */
+.header .flex .logo {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+}
+
+.header .flex .logo img {
+   width: 40px;
+   height: 40px;
+   border-radius: 50%;
+}
+</style>
+
 <header class="header">
-
    <div class="flex">
-
-      <a href="admin_page.php" class="logo">Kandu Pinnawala<span>.</span></a>
+      <!-- Logo and Shop Name in Header -->
+      <a href="home.php" class="logo">
+         <img src="images/logo.jpeg" alt="Kandu Pinnawala Logo">
+         Kandu Pinnawala<span></span>
+      </a>
 
       <nav class="navbar">
          <a href="home.php">home</a>
@@ -56,7 +73,5 @@ if(isset($message)){
             <a href="register.php" class="option-btn">register</a>
          </div>
       </div>
-
    </div>
-
 </header>
