@@ -4,7 +4,7 @@
 session_start();
 
 $user_id = $_SESSION['user_id'];
-if(!isset($user_id)){
+  if(!isset($user_id)){
    header('location:login.php');
 };
 
@@ -32,6 +32,7 @@ if(isset($_POST['add_to_wishlist'])){
 }
 
 if(isset($_POST['add_to_cart'])){
+ 
    $pid = filter_var($_POST['pid'], FILTER_SANITIZE_STRING);
    $p_name = filter_var($_POST['p_name'], FILTER_SANITIZE_STRING);
    $p_price = filter_var($_POST['p_price'], FILTER_SANITIZE_STRING);
@@ -76,7 +77,7 @@ if(isset($_POST['add_to_cart'])){
    <!-- Custom CSS -->
    <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body >
 
 <?php include 'header.php'; ?>
 
@@ -90,7 +91,7 @@ if(isset($_POST['add_to_cart'])){
    </section>
 </div>
 
-<section class="home-category pb-0">
+<section class="home-category pb-0 ">
    <h1 class="title text-4xl uppercase text-center mb-8">shop by category</h1>
    <div class="box-container grid gap-6 justify-center">
       <div class="box p-6 rounded shadow bg-white text-center">
@@ -111,7 +112,7 @@ if(isset($_POST['add_to_cart'])){
          <p class="text-sm text-gray-600 leading-6">Locally grown vegetables with natural freshness.</p>
          <a href="category.php?category=vegitables" class="btn">wallarts</a>
       </div>
-      <div class="box p-6 rounded shadow bg-white text-center">
+      <div class="box p-6 rounded shadow bg-white text-center" >
          <img src="images/brass.png" alt="">
          <h3 class="text-xl uppercase text-black py-2">brass</h3>
          <p class="text-sm text-gray-600 leading-6">Catch of the day, fresh from local fishermen.</p>
@@ -150,7 +151,7 @@ if(isset($_POST['add_to_cart'])){
       ?>
    </div>
 </section>
-
+<?php include 'about.php'; ?>
 <?php include 'footer.php'; ?>
 
 <script src="js/script.js"></script>

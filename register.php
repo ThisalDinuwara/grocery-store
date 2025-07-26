@@ -12,6 +12,8 @@ if(isset($_POST['submit'])){
    $pass = filter_var($pass, FILTER_SANITIZE_STRING);
    $cpass = md5($_POST['cpass']);
    $cpass = filter_var($cpass, FILTER_SANITIZE_STRING);
+   $contact = $_POST['contact'];
+   $contact = filter_var($contact, FILTER_SANITIZE_STRING);
 
    $image = $_FILES['image']['name'];
    $image = filter_var($image, FILTER_SANITIZE_STRING);
@@ -28,8 +30,8 @@ if(isset($_POST['submit'])){
       if($pass != $cpass){
          $message[] = 'confirm password not matched!';
       }else{
-         $insert = $conn->prepare("INSERT INTO `users`(name, email, password, image) VALUES(?,?,?,?)");
-         $insert->execute([$name, $email, $pass, $image]);
+         $insert = $conn->prepare("INSERT INTO `users`(name, email, password, image, contact) VALUES(?,?,?,?,?)");
+         $insert->execute([$name, $email, $pass, $image,$contact]);
 
          if($insert){
             if($image_size > 2000000){
@@ -88,6 +90,7 @@ if(isset($message)){
       <input type="email" name="email" class="box" placeholder="enter your email" required>
       <input type="password" name="pass" class="box" placeholder="enter your password" required>
       <input type="password" name="cpass" class="box" placeholder="confirm your password" required>
+      <input type="text" name="contact" class="box" placeholder="enter your contact" required>
       <input type="file" name="image" class="box" required accept="image/jpg, image/jpeg, image/png">
       <input type="submit" value="register now" class="btn" name="submit">
       <p>already have an account? <a href="login.php">login now</a></p>
