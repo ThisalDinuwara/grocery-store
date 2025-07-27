@@ -44,8 +44,8 @@
         }
 
         .box {
-            min-height: 160px;
-            padding: 1.2rem;
+            min-height: 200px;
+            padding: 1.5rem;
             background: rgba(255, 255, 255, 0.6);
             border-radius: 15px;
             backdrop-filter: blur(10px);
@@ -80,8 +80,8 @@
 
         .box h3 {
             color: #2e7d32;
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
             text-transform: lowercase;
             font-weight: 600;
             position: relative;
@@ -105,34 +105,41 @@
             align-items: center;
             color: #495057;
             text-decoration: none;
-            margin-bottom: 0.6rem;
-            font-size: 0.85rem;
-            line-height: 1.4;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            line-height: 1.5;
             transition: all 0.3s ease;
             position: relative;
             z-index: 3;
-            padding: 0.2rem 0;
+            padding: 0.8rem 1rem;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            border: 1px solid rgba(76, 175, 80, 0.1);
             opacity: 0.9;
+            min-height: 45px;
         }
 
         .box a:hover {
             color: #2e7d32;
-            transform: translateX(5px);
+            transform: translateX(8px) scale(1.02);
             text-shadow: 0 0 8px rgba(46, 125, 50, 0.4);
             opacity: 1;
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(76, 175, 80, 0.3);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.15);
         }
 
         .box i {
-            margin-right: 0.8rem;
+            margin-right: 1rem;
             color: #4CAF50;
-            width: 16px;
-            font-size: 0.9rem;
+            width: 20px;
+            font-size: 1.1rem;
             transition: all 0.3s ease;
         }
 
         .box a:hover i {
-            transform: scale(1.2);
-            filter: drop-shadow(0 0 5px rgba(76, 175, 80, 0.8));
+            transform: scale(1.3);
+            filter: drop-shadow(0 0 8px rgba(76, 175, 80, 0.8));
         }
 
         .map-container {
@@ -253,7 +260,13 @@
 
             .box {
                 min-height: auto;
-                padding: 1rem;
+                padding: 1.2rem;
+            }
+
+            .box a, .box p {
+                padding: 0.7rem 0.8rem;
+                font-size: 0.95rem;
+                min-height: 42px;
             }
 
             .footer {

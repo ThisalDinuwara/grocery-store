@@ -128,17 +128,17 @@ if(!isset($user_id)){
    <section class="about relative z-10 py-12 px-6 h-full flex items-center">
       <div class="row grid md:grid-cols-2 gap-8 w-full">
          <div class="box bg-white p-6 rounded shadow">
-            <img src="images/WhatsApp Image 2025-07-25 at 11.22.55_95c62fc0.jpg" alt="" class="mb-4">
+            <img src="images/about.png" alt="" class="mb-4">
             <h3 class="text-xl font-semibold mb-2">Why choose us?</h3>
             <p class="text-gray-700 mb-4">Lorem, ipsum dolor sit amet consectetur adipisicing elit...</p>
-            <a href="contact.php" class="btn bg-red-500 text-white px-4 py-2 rounded">Contact Us</a>
+            <a href="contact.php" class="btn bg-red-500 hover:bg-red-600 text-white px-8 py-8 text-6xl font-extrabold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 w-full text-center block mt-6">CONTACT US</a>
          </div>
 
          <div class="box bg-white p-6 rounded shadow">
             <img src="images/cart.png" alt="" class="mb-4">
             <h3 class="text-xl font-semibold mb-2">What we provide?</h3>
             <p class="text-gray-700 mb-4">Lorem, ipsum dolor sit amet consectetur adipisicing elit...</p>
-            <a href="shop.php" class="btn bg-red-500 text-white px-4 py-2 rounded">Our Shop</a>
+            <a href="shop.php" class="btn bg-red-500 hover:bg-red-600 text-white px-8 py-8 text-6xl font-extrabold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 w-full text-center block mt-6">OUR SHOP</a>
          </div>
       </div>
    </section>
