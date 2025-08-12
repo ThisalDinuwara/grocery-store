@@ -84,6 +84,9 @@ if(isset($_POST['add_to_cart'])){
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>search page</title>
 
+      <!-- Tailwind CDN (optional for live preview) -->
+   <script src="https://cdn.tailwindcss.com"></script>
+
    <!-- font awesome cdn link  -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 
@@ -95,59 +98,129 @@ if(isset($_POST['add_to_cart'])){
    
 <?php include 'header.php'; ?>
 
-<section class="search-form">
+<!-- Search + Results (matches new grid UI) -->
+<section id="products" class="py-20 bg-gray-50">
+  <div class="container mx-auto px-6 lg:px-12">
 
-   <form action="" method="POST">
-      <input type="text" class="box" name="search_box" placeholder="search products...">
-      <input type="submit" name="search_btn" value="search" class="btn">
-   </form>
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">Search Products</h2>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        Find authentic Sri Lankan handicrafts by name or category
+      </p>
+    </div>
 
+    <!-- Search Bar -->
+    <section class="mb-12">
+      <form action="" method="POST" class="max-w-3xl mx-auto flex gap-3">
+        <input
+          type="text"
+          class="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white/70 backdrop-blur placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+          name="search_box"
+          placeholder="Search products..."
+          value="<?= isset($_POST['search_box']) ? htmlspecialchars($_POST['search_box']) : '' ?>"
+        >
+        <button
+          type="submit"
+          name="search_btn"
+          class="px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-orange-500 to-red-600 hover:shadow-lg hover:shadow-orange-500/25 transition"
+        >
+          <i class="fas fa-search mr-2"></i> Search
+        </button>
+      </form>
+    </section>
+
+    <!-- Results Grid -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <?php
+        if (isset($_POST['search_btn'])) {
+          $search_box = $_POST['search_box'] ?? '';
+          $search_box = filter_var($search_box, FILTER_SANITIZE_STRING);
+
+          // Safe LIKE query with placeholders
+          $like = "%{$search_box}%";
+          $select_products = $conn->prepare(
+            "SELECT * FROM `products`
+             WHERE name LIKE ? OR category LIKE ? OR details LIKE ?
+             ORDER BY id DESC"
+          );
+          $select_products->execute([$like, $like, $like]);
+
+          if ($select_products->rowCount() > 0) {
+            while ($fetch_products = $select_products->fetch(PDO::FETCH_ASSOC)) {
+      ?>
+      <form action="" method="POST" class="group">
+        <div class="card-hover bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 relative">
+          <!-- Price Badge -->
+          <div class="absolute top-4 left-4 bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-2 rounded-full font-bold text-sm z-10">
+            Rs <?= htmlspecialchars($fetch_products['price']); ?>/-
+          </div>
+
+          <!-- View Button -->
+          <a href="view_page.php?pid=<?= (int)$fetch_products['id']; ?>"
+             class="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-700 hover:bg-orange-500 hover:text-white transition-all duration-300 z-10"
+             aria-label="View">
+            <i class="fas fa-eye"></i>
+          </a>
+
+          <!-- Product Image -->
+          <div class="aspect-square bg-gray-50 overflow-hidden">
+            <img src="uploaded_img/<?= htmlspecialchars($fetch_products['image']); ?>"
+                 alt="<?= htmlspecialchars($fetch_products['name']); ?>"
+                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                 onerror="this.src='uploaded_img/placeholder.png';">
+          </div>
+
+          <!-- Product Info -->
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-3">
+              <?= htmlspecialchars($fetch_products['name']); ?>
+            </h3>
+
+            <!-- Hidden Inputs -->
+            <input type="hidden" name="pid" value="<?= (int)$fetch_products['id']; ?>">
+            <input type="hidden" name="p_name" value="<?= htmlspecialchars($fetch_products['name']); ?>">
+            <input type="hidden" name="p_price" value="<?= htmlspecialchars($fetch_products['price']); ?>">
+            <input type="hidden" name="p_image" value="<?= htmlspecialchars($fetch_products['image']); ?>">
+
+            <!-- Quantity Input -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+              <input type="number" min="1" value="1" name="p_qty"
+                     class="qty w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all">
+            </div>
+
+            <!-- Add to Cart Button -->
+            <button type="submit" name="add_to_cart"
+                    class="w-full bg-gradient-to-r from-orange-500 to-red-600 text-white py-4 rounded-xl font-semibold hover:shadow-xl hover:shadow-orange-500/25 transition-all duration-300 transform hover:scale-[1.02]">
+              <i class="fas fa-shopping-cart mr-2"></i>
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </form>
+      <?php
+            }
+          } else {
+            echo '
+              <div class="col-span-full text-center py-16">
+                <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+                <p class="text-2xl text-gray-500 font-medium">No products available yet!</p>
+              </div>';
+          }
+        } else {
+          // Empty state before searching
+          echo '
+            <div class="col-span-full text-center py-16">
+              <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+              <p class="text-2xl text-gray-500 font-medium">Start by searching for a product…</p>
+            </div>';
+        }
+      ?>
+    </div>
+  </div>
 </section>
 
-<?php
-
-
-
-?>
-
-<section class="products" style="padding-top: 0; min-height:100vh;">
-
-   <div class="box-container">
-
-   <?php
-      if(isset($_POST['search_btn'])){
-      $search_box = $_POST['search_box'];
-      $search_box = filter_var($search_box, FILTER_SANITIZE_STRING);
-      $select_products = $conn->prepare("SELECT * FROM `products` WHERE name LIKE '%{$search_box}%' OR category LIKE '%{$search_box}%'");
-      $select_products->execute();
-      if($select_products->rowCount() > 0){
-         while($fetch_products = $select_products->fetch(PDO::FETCH_ASSOC)){ 
-   ?>
-   <form action="" class="box" method="POST">
-      <div class="price">$<span><?= $fetch_products['price']; ?></span>/-</div>
-      <a href="view_page.php?pid=<?= $fetch_products['id']; ?>" class="fas fa-eye"></a>
-      <img src="uploaded_img/<?= $fetch_products['image']; ?>" alt="">
-      <div class="name"><?= $fetch_products['name']; ?></div>
-      <input type="hidden" name="pid" value="<?= $fetch_products['id']; ?>">
-      <input type="hidden" name="p_name" value="<?= $fetch_products['name']; ?>">
-      <input type="hidden" name="p_price" value="<?= $fetch_products['price']; ?>">
-      <input type="hidden" name="p_image" value="<?= $fetch_products['image']; ?>">
-      <input type="number" min="1" value="1" name="p_qty" class="qty">
-      <input type="submit" value="add to wishlist" class="option-btn" name="add_to_wishlist">
-      <input type="submit" value="add to cart" class="btn" name="add_to_cart">
-   </form>
-   <?php
-         }
-      }else{
-         echo '<p class="empty">no result found!</p>';
-      }
-      
-   };
-   ?>
-
-   </div>
-
-</section>
 
 
 
