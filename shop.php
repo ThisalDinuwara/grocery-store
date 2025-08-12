@@ -100,10 +100,10 @@ if(isset($_POST['add_to_cart'])){
 
 <section class="p-category">
 
-   <a href="category.php?category=fruits">fruits</a>
-   <a href="category.php?category=vegitables">vegitables</a>
-   <a href="category.php?category=fish">fish</a>
-   <a href="category.php?category=meat">meat</a>
+   <a href="category.php?category=wood">Wood</a>
+   <a href="category.php?category=clothes">clothes</a>
+   <a href="category.php?category=wallarts">wallarts</a>
+   <a href="category.php?category=brass">brass</a>
 
 </section>
 

@@ -81,7 +81,7 @@ if(isset($_POST['add_to_cart'])){
 
 <?php include 'header.php'; ?>
 
-<div class="home-bg bg-cover bg-center">
+<div class="home-bg bg-cover bg-center" >
    <section class="home flex items-center min-h-[60vh]">
       <div class="content w-[50rem]">
          <h3 class="text-3xl text-black uppercase mt-4" style="color: white; margin:5px;">Discover the Beauty of Traditional Crafts</h3>
