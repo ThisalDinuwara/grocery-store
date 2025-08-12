@@ -1,7 +1,7 @@
 @import url('components.css');
 
 .home-bg{
-   background: url(../images/home-bg.jpg) no-repeat;
+   background: url(../images/home-bgg.jpg) no-repeat;
    background-size: cover;
    background-position: center;
 }
