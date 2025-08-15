@@ -4,9 +4,9 @@
 session_start();
 
 $user_id = $_SESSION['user_id'];
-  if(!isset($user_id)){
+if(!isset($user_id)){
    header('location:login.php');
-};
+}
 
 if(isset($_POST['add_to_wishlist'])){
    $pid = filter_var($_POST['pid'], FILTER_SANITIZE_STRING);
@@ -32,7 +32,6 @@ if(isset($_POST['add_to_wishlist'])){
 }
 
 if(isset($_POST['add_to_cart'])){
- 
    $pid = filter_var($_POST['pid'], FILTER_SANITIZE_STRING);
    $p_name = filter_var($_POST['p_name'], FILTER_SANITIZE_STRING);
    $p_price = filter_var($_POST['p_price'], FILTER_SANITIZE_STRING);
@@ -47,12 +46,10 @@ if(isset($_POST['add_to_cart'])){
    }else{
       $check_wishlist_numbers = $conn->prepare("SELECT * FROM wishlist WHERE name = ? AND user_id = ?");
       $check_wishlist_numbers->execute([$p_name, $user_id]);
-
       if($check_wishlist_numbers->rowCount() > 0){
          $delete_wishlist = $conn->prepare("DELETE FROM wishlist WHERE name = ? AND user_id = ?");
          $delete_wishlist->execute([$p_name, $user_id]);
       }
-
       $insert_cart = $conn->prepare("INSERT INTO cart(user_id, pid, name, price, quantity, image) VALUES(?,?,?,?,?,?)");
       $insert_cart->execute([$user_id, $pid, $p_name, $p_price, $p_qty, $p_image]);
       $message[] = 'added to cart!';
@@ -61,13 +58,11 @@ if(isset($_POST['add_to_cart'])){
 
 /* -------------------------------------------
    Customer Review backend (drop-in)
-   Place this after your other POST handlers
 --------------------------------------------*/
 if (
    $_SERVER['REQUEST_METHOD'] === 'POST' &&
    isset($_POST['review_title'], $_POST['review_email'], $_POST['review_message'])
 ) {
-   // Basic sanitization
    $rev_name   = trim(filter_var($_POST['review_name']  ?? '', FILTER_SANITIZE_STRING));
    $rev_email  = trim(filter_var($_POST['review_email'] ?? '', FILTER_SANITIZE_EMAIL));
    $rev_order  = trim(filter_var($_POST['review_order'] ?? '', FILTER_SANITIZE_STRING));
@@ -75,7 +70,6 @@ if (
    $rev_msg    = trim(filter_var($_POST['review_message'] ?? '', FILTER_SANITIZE_STRING));
    $rev_rating = (int)$_POST['review_rating'] ?? 0;
 
-   // Validate requireds
    $errors = [];
    if ($rev_name === '')   { $errors[] = 'Name is required.'; }
    if (!filter_var($rev_email, FILTER_VALIDATE_EMAIL)) { $errors[] = 'Valid email is required.'; }
@@ -83,21 +77,17 @@ if (
    if ($rev_msg === '')    { $errors[] = 'Review message is required.'; }
    if ($rev_rating < 1 || $rev_rating > 5) { $errors[] = 'Rating must be between 1 and 5.'; }
 
-   // Optional image upload
    $image_path = null;
    if (isset($_FILES['review_image']) && $_FILES['review_image']['error'] !== UPLOAD_ERR_NO_FILE) {
       if ($_FILES['review_image']['error'] === UPLOAD_ERR_OK) {
          $tmp  = $_FILES['review_image']['tmp_name'];
          $size = (int)$_FILES['review_image']['size'];
-
-         // Limit ~3MB
          if ($size > 3 * 1024 * 1024) {
             $errors[] = 'Image must be smaller than 3MB.';
          } else {
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $mime  = finfo_file($finfo, $tmp);
             finfo_close($finfo);
-
             $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
             if (!isset($allowed[$mime])) {
                $errors[] = 'Only JPG, PNG, or WEBP images are allowed.';
@@ -108,9 +98,8 @@ if (
                $destDir = __DIR__ . '/uploaded_reviews';
                if (!is_dir($destDir)) { @mkdir($destDir, 0755, true); }
                $dest = $destDir . '/' . $newName;
-
                if (move_uploaded_file($tmp, $dest)) {
-                  $image_path = 'uploaded_reviews/' . $newName; // relative path for <img>
+                  $image_path = 'uploaded_reviews/' . $newName;
                } else {
                   $errors[] = 'Failed to save uploaded image.';
                }
@@ -146,12 +135,11 @@ if (
 }
 
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
    <title>Kandu Pinnawala - Premium Sri Lankan Handicrafts</title>
 
    <!-- Tailwind CDN -->
@@ -161,170 +149,123 @@ if (
          theme: {
             extend: {
                colors: {
-                  primary: '#8B4513',   // Saddle Brown
-                  secondary: '#A0522D', // Sienna
-                  accent: '#D2B48C',    // Tan
-                  dark: '#3E2723',      // Dark Brown
-                  darker: '#1B0F0A'     // Deep Brown
+                  primary:  '#FF7F00', // vivid orange
+                  secondary:'#FF4500', // orange-red
+                  accent:   '#FFA500', // classic orange
+                  dark:     '#1A1200', // deep warm black
+                  darker:   '#0D0900'  // darkest
                },
-               fontFamily: {
-                  'gaming': ['Orbitron', 'monospace']
-               }
+               fontFamily: { gaming: ['Orbitron','monospace'] }
             }
          }
       }
    </script>
 
-   <!-- Font Awesome -->
+   <!-- Icons + Fonts -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-   
-   <!-- Google Fonts -->
    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
+      * { margin:0; padding:0; box-sizing:border-box; }
 
-      body {
+      /* ===== Larger, fixed typography ===== */
+      html { font-size: 17px; } /* 1rem ≈ 17px */
+      h1 { font-size: 3.3rem; line-height: 1.2; }  /* ~56px */
+      h2 { font-size: 2.8rem; line-height: 1.25; } /* ~48px */
+      h3 { font-size: 2.3rem; line-height: 1.3; }  /* ~40px */
+      h4 { font-size: 1.7rem; line-height: 1.35;} /* ~28px */
+      p, label, input, button, a, li { font-size: 1.25rem; line-height:1.65; } /* ~20px */
+
+      body{
          font-family: 'Inter', sans-serif;
-         background: linear-gradient(135deg, #1B0F0A 0%, #3E2723 50%, #5D4037 100%);
-         color: white;
-         overflow-x: hidden;
+         background: linear-gradient(135deg, #0D0900 0%, #1A1200 50%, #221700 100%);
+         color:#fff;
+         overflow-x:hidden;
       }
 
       .neon-glow {
-         box-shadow: 0 0 20px rgba(139, 69, 19, 0.5),
-                     0 0 40px rgba(160, 82, 45, 0.3),
-                     0 0 60px rgba(210, 180, 140, 0.2);
+         box-shadow: 0 0 20px rgba(255,127,0,.35), 0 0 40px rgba(255,69,0,.28), 0 0 60px rgba(255,165,0,.22);
       }
-
-      .glass-effect {
-         background: rgba(255, 255, 255, 0.08);
-         backdrop-filter: blur(10px);
-         border: 1px solid rgba(255, 255, 255, 0.18);
-      }
-
-      .hover-glow:hover {
-         transform: translateY(-5px);
-         box-shadow: 0 10px 25px rgba(139, 69, 19, 0.35);
-         transition: all 0.3s ease;
-      }
+      .glass-effect { background: rgba(255,255,255,.06); backdrop-filter: blur(10px); border:1px solid rgba(255,255,255,.15); }
+      .hover-glow:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(255,127,0,.35); transition: all .3s ease; }
 
       .floating-animation { animation: floating 3s ease-in-out infinite; }
-      @keyframes floating {
-         0%, 100% { transform: translateY(0); }
-         50% { transform: translateY(-10px); }
+      @keyframes floating { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+      .gradient-text{
+         background: linear-gradient(45deg, #FF7F00, #FF4500, #FFA500);
+         -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
       }
 
-      .gradient-text {
-         background: linear-gradient(45deg, #8B4513, #A0522D, #D2B48C);
-         -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      .cyber-border{
+         position:relative; border:2px solid transparent;
+         background: linear-gradient(135deg, rgba(255,127,0,.22), rgba(255,165,0,.22)) border-box;
+         -webkit-mask:linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+         -webkit-mask-composite: xor; mask-composite: exclude;
       }
 
-      .cyber-border {
-         position: relative; border: 2px solid transparent;
-         background: linear-gradient(135deg, rgba(139, 69, 19, 0.2), rgba(160, 82, 45, 0.2)) border-box;
-         -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-         -webkit-mask-composite: exclude;
+      .message{
+         position:fixed; top:20px; right:20px; z-index:1000;
+         background: rgba(255,127,0,.9); color:#1A1200;
+         padding:15px 20px; border-radius:10px; border:1px solid rgba(255,255,255,.2);
+         animation: slideIn .3s ease;
       }
+      @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
 
-      .message {
-         position: fixed; top: 20px; right: 20px; background: rgba(139, 69, 19, 0.9);
-         backdrop-filter: blur(10px); color: white; padding: 15px 20px; border-radius: 10px;
-         border: 1px solid rgba(255, 255, 255, 0.2); z-index: 1000; animation: slideIn 0.3s ease;
+      .ai-chat-widget{
+         position:fixed; bottom:30px; right:30px; width:60px; height:60px; z-index:1000;
+         background: linear-gradient(135deg, #FF7F00, #FF4500); color:#1A1200;
+         border-radius:50%; display:flex; align-items:center; justify-content:center;
+         cursor:pointer; box-shadow:0 10px 25px rgba(255,127,0,.4); animation:pulse 2s infinite;
       }
-      @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1); } }
+      @keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
 
-      .ai-chat-widget {
-         position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
-         background: linear-gradient(135deg, #8B4513, #D2B48C);
-         border-radius: 50%; display: flex; align-items: center; justify-content: center;
-         cursor: pointer; box-shadow: 0 10px 25px rgba(139, 69, 19, 0.4); animation: pulse 2s infinite; z-index: 1000;
-      }
-      @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-
-      .hero-bg {
+      .hero-bg{
          background:
-           radial-gradient(circle at 20% 80%, rgba(139, 69, 19, 0.35) 0%, transparent 55%),
-           radial-gradient(circle at 80% 20%, rgba(210, 180, 140, 0.35) 0%, transparent 55%),
-           radial-gradient(circle at 40% 40%, rgba(160, 82, 45, 0.35) 0%, transparent 55%);
+           radial-gradient(circle at 20% 80%, rgba(255,127,0,.25) 0%, transparent 55%),
+           radial-gradient(circle at 80% 20%, rgba(255,69,0,.25) 0%, transparent 55%),
+           radial-gradient(circle at 40% 40%, rgba(255,165,0,.25) 0%, transparent 55%);
       }
 
-      .category-icon {
-         width: 80px; height: 80px;
-         background: linear-gradient(135deg, rgba(139, 69, 19, 0.25), rgba(160, 82, 45, 0.25));
-         border-radius: 20px; display: flex; align-items: center; justify-content: center;
-         margin: 0 auto 20px; transition: all 0.3s ease;
+      .category-icon{
+         width:80px; height:80px; border-radius:20px;
+         background: linear-gradient(135deg, rgba(255,127,0,.18), rgba(255,165,0,.18));
+         display:flex; align-items:center; justify-content:center;
+         margin:0 auto 20px; transition:all .3s ease;
       }
-      .category-icon:hover { transform: rotateY(180deg); background: linear-gradient(135deg, #8B4513, #D2B48C); }
+      .category-icon:hover{ transform:rotateY(180deg); background: linear-gradient(135deg, #FF7F00, #FFA500); }
 
-      /* ===============================
-         FONT SIZE BUMP (not headers)
-         =============================== */
-      .text-base{font-size:1.125rem!important;}  /* 18px */
-      .text-lg{font-size:1.25rem!important;}     /* 20px */
-      .text-xl{font-size:1.375rem!important;}    /* 22px */
-      p, label, input, button, a, li { font-size:1.12rem; } /* ~18px for readability */
-
-      /* ===============================
-         MODERN PRODUCT GRID (only styles)
-         =============================== */
+      /* ===== Product grid ===== */
       .product-card{
-         background: linear-gradient(180deg, rgba(62,39,35,0.92), rgba(62,39,35,0.8));
-         border:1px solid rgba(210,180,140,0.28);
-         border-radius:22px;
-         backdrop-filter: blur(16px);
+         background: linear-gradient(180deg, rgba(26,18,0,.95), rgba(26,18,0,.86));
+         border:1px solid rgba(255,205,150,.28);
+         border-radius:22px; backdrop-filter: blur(16px);
          transition: transform .4s ease, box-shadow .4s ease, border-color .4s ease;
       }
       .product-card:hover{
          transform: translateY(-10px) scale(1.02);
-         border-color: rgba(210,180,140,0.6);
-         box-shadow: 0 22px 48px rgba(160,82,45,0.35);
+         border-color: rgba(255,205,150,.58);
+         box-shadow: 0 22px 48px rgba(255,127,0,.28);
       }
-      /* image wrapper */
       .product-card .aspect-square{
-         position:relative;
-         border-radius:18px;
-         border:1px solid rgba(210,180,140,0.25);
-         overflow:hidden;
-         background: radial-gradient(600px 120px at 20% 0%, rgba(210,180,140,.18), transparent 60%);
+         position:relative; border-radius:18px; overflow:hidden;
+         border:1px solid rgba(255,205,150,.25);
+         background: radial-gradient(600px 120px at 20% 0%, rgba(255,165,0,.18), transparent 60%);
       }
       .product-card img{ transition: transform .6s ease; }
       .group:hover .product-card img{ transform: scale(1.07); }
 
-      /* price badge */
       .price-badge{
-         font-size:1.05rem;           /* bigger price */
-         letter-spacing:.3px;
-         padding:.6rem 1rem;
+         font-size:1.05rem; letter-spacing:.3px; padding:.6rem 1rem; color:#1A1200;
          border:1px solid rgba(255,255,255,.18);
-         box-shadow: 0 6px 18px rgba(210,180,140,.25);
+         box-shadow: 0 6px 18px rgba(255,127,0,.25);
+         background: linear-gradient(90deg, #FF7F00, #FF4500);
       }
 
-      /* title more visible */
-      .product-title{
-         font-weight:800;
-         letter-spacing:.2px;
-         color:#FFF7EE;               /* warm off-white for contrast */
-         text-shadow: 0 1px 0 rgba(0,0,0,.35);
-         line-height:1.25;
-      }
-
-      /* labels + inputs */
-      .product-card label{ color:#F0E6DA; font-weight:600; }
+      .product-title{ font-weight:800; letter-spacing:.2px; line-height:1.25; color:#FFF3E0; text-shadow:0 1px 0 rgba(0,0,0,.35); }
+      .product-card label{ color:#FFE4C4; font-weight:600; }
       .product-card .qty{ background: rgba(255,255,255,.08); }
-      .product-card .qty:focus{ outline:none; box-shadow:0 0 0 3px rgba(210,180,140,.35); }
-
-      /* button bigger & readable */
-      .product-card button[name="add_to_cart"]{
-         font-size:1.1rem;
-         letter-spacing:.2px;
-      }
-
-      /* wishlist/view buttons clearer */
-      .product-card .glass-effect{
-         border-color: rgba(255,255,255,.25);
-         color:#E2C9A8;
-      }
+      .product-card .qty:focus{ outline:none; box-shadow:0 0 0 3px rgba(255,127,0,.35); }
    </style>
 </head>
 <body>
@@ -333,10 +274,9 @@ if (
 
 <!-- Hero Section -->
 <section class="relative min-h-screen flex items-center justify-center overflow-hidden hero-bg">
-   <!-- Animated Background Elements -->
-   <div class="absolute top-10 left-10 w-96 h-96 bg-gradient-to-r from-[rgba(139,69,19,0.2)] to-[rgba(210,180,140,0.2)] rounded-full blur-3xl floating-animation"></div>
-   <div class="absolute bottom-10 right-10 w-80 h-80 bg-gradient-to-r from-[rgba(160,82,45,0.2)] to-[rgba(139,69,19,0.2)] rounded-full blur-3xl floating-animation" style="animation-delay: 1s;"></div>
-   
+   <div class="absolute top-10 left-10 w-96 h-96 rounded-full blur-3xl floating-animation opacity-30" style="background:linear-gradient(135deg,#FF7F00,#FF4500)"></div>
+   <div class="absolute bottom-10 right-10 w-80 h-80 rounded-full blur-3xl floating-animation opacity-30" style="animation-delay:1s;background:linear-gradient(135deg,#FFA500,#FF7F00)"></div>
+
    <div class="container mx-auto px-6 lg:px-12 grid lg:grid-cols-2 gap-16 items-center relative z-10">
       <!-- Content -->
       <div class="space-y-8">
@@ -345,38 +285,27 @@ if (
                <span class="gradient-text font-gaming">KANDU</span><br>
                <span class="text-white">PINNAWALA</span>
             </h1>
-            <div class="h-1 w-32 bg-gradient-to-r from-[#8B4513] to-[#D2B48C] rounded-full"></div>
-            <p class="text-xl text-gray-300 leading-relaxed max-w-2xl">
-               Discover the ultimate collection of traditional Sri Lankan handicrafts. Where heritage meets innovation in a warm, earthy aesthetic.
+            <div class="h-1 w-40 rounded-full" style="background:linear-gradient(90deg,#FF7F00,#FF4500)"></div>
+            <p class="text-xl text-gray-200 leading-relaxed max-w-2xl">
+               Discover the ultimate collection of traditional Sri Lankan handicrafts — now in a warm, modern orange theme.
             </p>
          </div>
-         
+
          <div class="flex flex-col sm:flex-row gap-6">
-            <button class="group bg-gradient-to-r from-[#8B4513] to-[#D2B48C] text-white px-8 py-4 rounded-full font-semibold text-lg hover-glow neon-glow">
-               <i class="fas fa-rocket mr-2"></i>
-               EXPLORE NOW
+            <button class="group text-black px-9 py-4 rounded-full font-semibold text-lg hover-glow neon-glow" style="background:linear-gradient(90deg,#FF7F00,#FF4500)">
+               <i class="fas fa-rocket mr-2"></i> EXPLORE NOW
                <i class="fas fa-chevron-right ml-2 group-hover:translate-x-1 transition-transform"></i>
             </button>
-            <button class="glass-effect text-white px-8 py-4 rounded-full font-semibold text-lg hover-glow border border-[rgba(139,69,19,0.5)]">
-               <i class="fas fa-play mr-2"></i>
-               WATCH DEMO
+            <button class="glass-effect text-white px-9 py-4 rounded-full font-semibold text-lg hover-glow border border-white/30">
+               <i class="fas fa-play mr-2"></i> WATCH DEMO
             </button>
          </div>
 
          <!-- Stats -->
-         <div class="flex space-x-8 pt-8">
-            <div class="text-center">
-               <div class="text-3xl font-bold gradient-text">1000+</div>
-               <div class="text-gray-400 text-sm">Products</div>
-            </div>
-            <div class="text-center">
-               <div class="text-3xl font-bold gradient-text">500+</div>
-               <div class="text-gray-400 text-sm">Happy Customers</div>
-            </div>
-            <div class="text-center">
-               <div class="text-3xl font-bold gradient-text">50+</div>
-               <div class="text-gray-400 text-sm">Artisans</div>
-            </div>
+         <div class="flex space-x-8 pt-6">
+            <div class="text-center"><div class="text-4xl font-bold gradient-text">1000+</div><div class="text-gray-300 text-sm">Products</div></div>
+            <div class="text-center"><div class="text-4xl font-bold gradient-text">500+</div><div class="text-gray-300 text-sm">Happy Customers</div></div>
+            <div class="text-center"><div class="text-4xl font-bold gradient-text">50+</div><div class="text-gray-300 text-sm">Artisans</div></div>
          </div>
       </div>
 
@@ -384,94 +313,64 @@ if (
       <div class="relative">
          <div class="glass-effect p-8 rounded-3xl neon-glow">
             <div class="aspect-square rounded-2xl overflow-hidden">
-               <img src="images/new.jpg" 
-                    alt="Sri Lankan Handicrafts" 
-                    class="w-full h-full object-cover">
+               <img src="images/new.jpg" alt="Sri Lankan Handicrafts" class="w-full h-full object-cover">
             </div>
-            <!-- Floating Elements -->
-            <div class="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-r from-[#8B4513] to-[#D2B48C] rounded-2xl flex items-center justify-center floating-animation">
-               <i class="fas fa-star text-2xl"></i>
-            </div>
-            <div class="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-r from-[#A0522D] to-[#8B4513] rounded-xl flex items-center justify-center floating-animation" style="animation-delay: 0.5s;">
-               <i class="fas fa-heart text-xl"></i>
-            </div>
+            <div class="absolute -top-4 -right-4 w-20 h-20 rounded-2xl flex items-center justify-center floating-animation"
+                 style="background:linear-gradient(135deg,#FF7F00,#FF4500)"><i class="fas fa-star text-2xl text-black"></i></div>
+            <div class="absolute -bottom-4 -left-4 w-16 h-16 rounded-xl flex items-center justify-center floating-animation" style="animation-delay:.5s;background:linear-gradient(135deg,#FFA500,#FF7F00)"><i class="fas fa-heart text-xl text-black"></i></div>
          </div>
       </div>
    </div>
 </section>
 
-<!-- Categories Section -->
+<!-- Categories -->
 <section class="py-20 relative">
    <div class="container mx-auto px-6 lg:px-12">
       <div class="text-center mb-16">
-         <h2 class="text-5xl lg:text-6xl font-bold mb-6">
-            <span class="gradient-text font-gaming">CATEGORIES</span>
-         </h2>
-         <div class="h-1 w-24 bg-gradient-to-r from-[#8B4513] to-[#D2B48C] rounded-full mx-auto mb-6"></div>
-         <p class="text-xl text-gray-300 max-w-3xl mx-auto">Choose your craft category and dive into traditional Sri Lankan artistry</p>
+         <h2 class="font-bold mb-6"><span class="gradient-text font-gaming">CATEGORIES</span></h2>
+         <div class="h-1 w-28 rounded-full mx-auto mb-6" style="background:linear-gradient(90deg,#FF7F00,#FF4500)"></div>
+         <p class="text-xl text-gray-200 max-w-3xl mx-auto">Choose your craft category and dive into traditional Sri Lankan artistry</p>
       </div>
 
       <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
          <div class="glass-effect p-8 rounded-3xl text-center hover-glow cyber-border">
-            <div class="category-icon">
-               <i class="fas fa-tree text-3xl text-[#CD853F]"></i>
-            </div>
+            <div class="category-icon"><i class="fas fa-tree text-3xl" style="color:#FFA500"></i></div>
             <h3 class="text-2xl font-bold mb-4 gradient-text">WOOD</h3>
-            <p class="text-gray-300 mb-6 leading-relaxed">Handcrafted wooden masterpieces showcasing traditional artistry</p>
-            <a href="category.php?category=wood" class="inline-flex items-center text-[#CD853F] font-semibold hover:text-[#deb887] transition-colors">
-               <i class="fas fa-arrow-right mr-2"></i>
-               EXPLORE
-            </a>
+            <p class="text-gray-200 mb-6 leading-relaxed">Handcrafted wooden masterpieces showcasing traditional artistry</p>
+            <a href="category.php?category=wood" class="inline-flex items-center font-semibold" style="color:#FFA500"><i class="fas fa-arrow-right mr-2"></i>EXPLORE</a>
          </div>
 
          <div class="glass-effect p-8 rounded-3xl text-center hover-glow cyber-border">
-            <div class="category-icon">
-               <i class="fas fa-tshirt text-3xl text-[#deb887]"></i>
-            </div>
+            <div class="category-icon"><i class="fas fa-tshirt text-3xl" style="color:#FF7F00"></i></div>
             <h3 class="text-2xl font-bold mb-4 gradient-text">CLOTHES</h3>
-            <p class="text-gray-300 mb-6 leading-relaxed">Traditional garments woven with cultural heritage</p>
-            <a href="category.php?category=clothes" class="inline-flex items-center text-[#CD853F] font-semibold hover:text-[#deb887] transition-colors">
-               <i class="fas fa-arrow-right mr-2"></i>
-               EXPLORE
-            </a>
+            <p class="text-gray-200 mb-6 leading-relaxed">Traditional garments woven with cultural heritage</p>
+            <a href="category.php?category=clothes" class="inline-flex items-center font-semibold" style="color:#FFA500"><i class="fas fa-arrow-right mr-2"></i>EXPLORE</a>
          </div>
 
          <div class="glass-effect p-8 rounded-3xl text-center hover-glow cyber-border">
-            <div class="category-icon">
-               <i class="fas fa-palette text-3xl text-[#A0522D]"></i>
-            </div>
+            <div class="category-icon"><i class="fas fa-palette text-3xl" style="color:#FF4500"></i></div>
             <h3 class="text-2xl font-bold mb-4 gradient-text">WALL ARTS</h3>
-            <p class="text-gray-300 mb-6 leading-relaxed">Beautiful decorations reflecting artistic traditions</p>
-            <a href="category.php?category=wallarts" class="inline-flex items-center text-[#CD853F] font-semibold hover:text-[#deb887] transition-colors">
-               <i class="fas fa-arrow-right mr-2"></i>
-               EXPLORE
-            </a>
+            <p class="text-gray-200 mb-6 leading-relaxed">Beautiful decorations reflecting artistic traditions</p>
+            <a href="category.php?category=wallarts" class="inline-flex items-center font-semibold" style="color:#FFA500"><i class="fas fa-arrow-right mr-2"></i>EXPLORE</a>
          </div>
 
          <div class="glass-effect p-8 rounded-3xl text-center hover-glow cyber-border">
-            <div class="category-icon">
-               <i class="fas fa-medal text-3xl text-[#FFD166]"></i>
-            </div>
+            <div class="category-icon"><i class="fas fa-medal text-3xl" style="color:#FFD8A8"></i></div>
             <h3 class="text-2xl font-bold mb-4 gradient-text">BRASS</h3>
-            <p class="text-gray-300 mb-6 leading-relaxed">Exquisite brass items by skilled traditional artisans</p>
-            <a href="category.php?category=brass" class="inline-flex items-center text-[#CD853F] font-semibold hover:text-[#deb887] transition-colors">
-               <i class="fas fa-arrow-right mr-2"></i>
-               EXPLORE
-            </a>
+            <p class="text-gray-200 mb-6 leading-relaxed">Exquisite brass items by skilled traditional artisans</p>
+            <a href="category.php?category=brass" class="inline-flex items-center font-semibold" style="color:#FFA500"><i class="fas fa-arrow-right mr-2"></i>EXPLORE</a>
          </div>
       </div>
    </div>
 </section>
 
-<!-- Featured Products Section (MODERNIZED GRID) -->
+<!-- Featured Products -->
 <section id="products" class="py-20 relative">
    <div class="container mx-auto px-6 lg:px-12">
       <div class="text-center mb-16">
-         <h2 class="text-5xl lg:text-6xl font-bold mb-6">
-            <span class="gradient-text font-gaming">FEATURED</span>
-         </h2>
-         <div class="h-1 w-24 bg-gradient-to-r from-[#8B4513] to-[#D2B48C] rounded-full mx-auto mb-6"></div>
-         <p class="text-xl text-gray-300 max-w-3xl mx-auto">Discover our premium collection of authentic Sri Lankan handicrafts</p>
+         <h2 class="font-bold mb-6"><span class="gradient-text font-gaming">FEATURED</span></h2>
+         <div class="h-1 w-28 rounded-full mx-auto mb-6" style="background:linear-gradient(90deg,#FF7F00,#FF4500)"></div>
+         <p class="text-xl text-gray-200 max-w-3xl mx-auto">Discover our premium collection of authentic Sri Lankan handicrafts</p>
       </div>
 
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
@@ -479,147 +378,113 @@ if (
             $select_products = $conn->prepare("SELECT * FROM products LIMIT 6");
             $select_products->execute();
             if($select_products->rowCount() > 0){
-               while($fetch_products = $select_products->fetch(PDO::FETCH_ASSOC)){ 
+               while($fetch_products = $select_products->fetch(PDO::FETCH_ASSOC)){
          ?>
          <form action="" method="POST" class="group">
             <div class="product-card p-6 relative h-full flex flex-col">
-               <!-- Price Badge (added .price-badge class) -->
-               <div class="absolute top-6 left-6 bg-gradient-to-r from-[#8B4513] to-[#D2B48C] text-white px-4 py-2 rounded-full font-bold text-sm z-10 neon-glow price-badge">
-                  Rs <?= $fetch_products['price']; ?>
-               </div>
-               
-               <!-- Wishlist & View Buttons -->
+               <div class="price-badge absolute top-6 left-6 z-10">Rs <?= $fetch_products['price']; ?></div>
+
                <div class="absolute top-6 right-6 flex flex-col gap-2 z-10">
-                  <button type="submit" name="add_to_wishlist" class="w-11 h-11 glass-effect rounded-full flex items-center justify-center hover:text-white hover:bg-gradient-to-r hover:from-[#8B4513] hover:to-[#D2B48C] transition-all">
+                  <button type="submit" name="add_to_wishlist" class="w-11 h-11 glass-effect rounded-full flex items-center justify-center hover:text-black transition-all"
+                          onmouseover="this.style.background='linear-gradient(90deg,#FF7F00,#FF4500)';this.style.color='#000';"
+                          onmouseout="this.style.background='';this.style.color='';">
                      <i class="fas fa-heart"></i>
                   </button>
-                  <a href="view_page.php?pid=<?= $fetch_products['id']; ?>" 
-                     class="w-11 h-11 glass-effect rounded-full flex items-center justify-center hover:text-white hover:bg-gradient-to-r hover:from-[#8B4513] hover:to-[#D2B48C] transition-all">
+                  <a href="view_page.php?pid=<?= $fetch_products['id']; ?>" class="w-11 h-11 glass-effect rounded-full flex items-center justify-center hover:text-black transition-all"
+                     onmouseover="this.style.background='linear-gradient(90deg,#FF7F00,#FF4500)';this.style.color='#000';"
+                     onmouseout="this.style.background='';this.style.color='';">
                      <i class="fas fa-eye"></i>
                   </a>
                </div>
 
-               <!-- Product Image -->
                <div class="aspect-square rounded-2xl overflow-hidden mb-6">
-                  <img src="uploaded_img/<?= $fetch_products['image']; ?>" 
-                       alt="<?= $fetch_products['name']; ?>" 
-                       class="w-full h-full object-cover">
+                  <img src="uploaded_img/<?= $fetch_products['image']; ?>" alt="<?= $fetch_products['name']; ?>" class="w-full h-full object-cover">
                </div>
 
-               <!-- Product Info -->
                <div class="space-y-4 mt-auto">
                   <h3 class="text-xl product-title"><?= $fetch_products['name']; ?></h3>
-                  
-                  <!-- Hidden Inputs -->
+
                   <input type="hidden" name="pid" value="<?= $fetch_products['id']; ?>">
                   <input type="hidden" name="p_name" value="<?= $fetch_products['name']; ?>">
                   <input type="hidden" name="p_price" value="<?= $fetch_products['price']; ?>">
                   <input type="hidden" name="p_image" value="<?= $fetch_products['image']; ?>">
-                  
-                  <!-- Quantity Input -->
+
                   <div class="flex items-center gap-3">
                      <label class="text-sm font-medium">QTY:</label>
-                     <input type="number" min="1" value="1" name="p_qty" 
-                            class="qty w-24 px-3 py-2 glass-effect rounded-lg text-white text-center focus:ring-2 focus:ring-[rgb(139,69,19)] transition-all">
+                     <input type="number" min="1" value="1" name="p_qty" class="qty w-28 px-3 py-2 glass-effect rounded-lg text-white text-center focus:ring-2" style="--tw-ring-color: rgba(255,127,0,.7)">
                   </div>
 
-                  <!-- Add to Cart Button -->
-                  <button type="submit" name="add_to_cart" 
-                          class="w-full bg-gradient-to-r from-[#8B4513] to-[#D2B48C] text-white py-3.5 rounded-xl font-semibold hover-glow neon-glow transition-all duration-300 transform hover:scale-[1.02]">
-                     <i class="fas fa-shopping-cart mr-2"></i>
-                     ADD TO CART
+                  <button type="submit" name="add_to_cart" class="w-full text-black py-3.5 rounded-xl font-semibold hover-glow neon-glow transition-all duration-300 transform hover:scale-[1.02]" style="background:linear-gradient(90deg,#FF7F00,#FF4500)">
+                     <i class="fas fa-shopping-cart mr-2"></i> ADD TO CART
                   </button>
                </div>
             </div>
          </form>
          <?php
+               }
+            } else {
+               echo '<div class="col-span-full text-center py-16">
+                        <div class="glass-effect p-12 rounded-3xl max-w-md mx-auto">
+                           <i class="fas fa-box-open text-6xl" style="color:#FFA500"></i>
+                           <p class="text-2xl text-gray-200 font-medium">No products available yet!</p>
+                        </div>
+                     </div>';
             }
-         }else{
-            echo '<div class="col-span-full text-center py-16">
-                     <div class="glass-effect p-12 rounded-3xl max-w-md mx-auto">
-                        <i class="fas fa-box-open text-6xl" style="color:#CD853F"></i>
-                        <p class="text-2xl text-gray-300 font-medium">No products available yet!</p>
-                     </div>
-                  </div>';
-         }
          ?>
       </div>
 
-      <!-- View All Products Button -->
       <div class="text-center mt-12">
-         <a href="shop.php" class="inline-flex items-center bg-gradient-to-r from-[#5D4037] to-[#4E342E] glass-effect text-white px-8 py-4 rounded-full font-semibold text-lg hover-glow transition-all duration-300 transform hover:scale-105">
-            <i class="fas fa-store mr-3"></i>
-            VIEW ALL PRODUCTS
+         <a href="shop.php" class="inline-flex items-center glass-effect text-white px-9 py-4 rounded-full font-semibold text-lg hover-glow transition-all duration-300 transform hover:scale-105" style="background:linear-gradient(90deg,#FFA500,#FF7F00)">
+            <i class="fas fa-store mr-3"></i> VIEW ALL PRODUCTS
             <i class="fas fa-arrow-right ml-3"></i>
          </a>
       </div>
    </div>
 </section>
 
-<!-- Stats Section -->
+<!-- Stats -->
 <section class="py-20 relative">
    <div class="container mx-auto px-6 lg:px-12">
       <div class="glass-effect rounded-3xl p-12">
          <div class="grid md:grid-cols-4 gap-8 text-center">
-            <div>
-               <div class="text-5xl font-bold gradient-text mb-2">1000+</div>
-               <div class="text-gray-300">Premium Products</div>
-            </div>
-            <div>
-               <div class="text-5xl font-bold gradient-text mb-2">500+</div>
-               <div class="text-gray-300">Happy Customers</div>
-            </div>
-            <div>
-               <div class="text-5xl font-bold gradient-text mb-2">50+</div>
-               <div class="text-gray-300">Master Artisans</div>
-            </div>
-            <div>
-               <div class="text-5xl font-bold gradient-text mb-2">24/7</div>
-               <div class="text-gray-300">Customer Support</div>
-            </div>
+            <div><div class="text-5xl font-bold gradient-text mb-2">1000+</div><div class="text-gray-300">Premium Products</div></div>
+            <div><div class="text-5xl font-bold gradient-text mb-2">500+</div><div class="text-gray-300">Happy Customers</div></div>
+            <div><div class="text-5xl font-bold gradient-text mb-2">50+</div><div class="text-gray-300">Master Artisans</div></div>
+            <div><div class="text-5xl font-bold gradient-text mb-2">24/7</div><div class="text-gray-300">Customer Support</div></div>
          </div>
       </div>
    </div>
 </section>
 
 <!-- AI Chat Widget -->
-<div class="ai-chat-widget" onclick="toggleChat()">
-   <i class="fas fa-robot text-2xl"></i>
-</div>
+<div class="ai-chat-widget" onclick="toggleChat()"><i class="fas fa-robot text-2xl"></i></div>
 
 <!-- Chat Interface -->
-<div id="chatInterface" class="fixed bottom-20 right-8 w-80 h-96 glass-effect rounded-3xl p-6 transform translate-y-full opacity-0 transition-all duration-300 z-50" style="display: none;">
+<div id="chatInterface" class="fixed bottom-20 right-8 w-80 h-96 glass-effect rounded-3xl p-6 transform translate-y-full opacity-0 transition-all duration-300 z-50" style="display:none;">
    <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold gradient-text">AI Assistant</h3>
-      <button onclick="toggleChat()" class="text-gray-400 hover:text-white">
-         <i class="fas fa-times"></i>
-      </button>
+      <button onclick="toggleChat()" class="text-gray-300 hover:text-white"><i class="fas fa-times"></i></button>
    </div>
    <div class="h-64 overflow-y-auto mb-4 space-y-3" id="chatMessages">
-      <div class="bg-[rgba(139,69,19,0.2)] p-3 rounded-lg">
-         <p class="text-sm text-gray-300">Hello! I'm here to help you find the perfect Sri Lankan handicraft. What are you looking for?</p>
+      <div class="p-3 rounded-lg" style="background:rgba(255,127,0,.15)">
+         <p class="text-sm text-gray-200">Hello! I'm here to help you find the perfect Sri Lankan handicraft. What are you looking for?</p>
       </div>
    </div>
    <div class="flex gap-2">
-      <input type="text" id="chatInput" placeholder="Type your message..." 
-             class="flex-1 px-4 py-2 glass-effect rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(139,69,19)]">
-      <button onclick="sendMessage()" class="bg-gradient-to-r from-[#8B4513] to-[#D2B48C] px-4 py-2 rounded-lg hover-glow">
-         <i class="fas fa-paper-plane"></i>
-      </button>
+      <input type="text" id="chatInput" placeholder="Type your message..." class="flex-1 px-4 py-2 glass-effect rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2" style="--tw-ring-color: rgba(255,127,0,.7)">
+      <button onclick="sendMessage()" class="px-4 py-2 rounded-lg hover-glow text-black" style="background:linear-gradient(90deg,#FF7F00,#FF4500)"><i class="fas fa-paper-plane"></i></button>
    </div>
 </div>
 
 <?php include 'about.php'; ?>
 
-<!-- Dynamic Customer Reviews (from database) -->
+<!-- Customer Reviews -->
 <section id="customer-reviews" class="py-20 relative">
   <div class="container mx-auto px-6 lg:px-12">
     <div class="text-center mb-12">
       <h2 class="text-4xl lg:text-5xl font-bold mb-4 text-white">What Customers Say</h2>
-      <p class="text-lg text-gray-300 max-w-2xl mx-auto">
-        Latest verified feedback from our community.
-      </p>
-      <div class="h-1 w-24 bg-gradient-to-r from-[#8B4513] to-[#D2B48C] rounded-full mx-auto mt-6"></div>
+      <p class="text-lg text-gray-200 max-w-2xl mx-auto">Latest verified feedback from our community.</p>
+      <div class="h-1 w-28 rounded-full mx-auto mt-6" style="background:linear-gradient(90deg,#FF7F00,#FF4500)"></div>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -641,17 +506,11 @@ if (
       ?>
         <div class="rounded-3xl overflow-hidden shadow-lg border border-white/20 bg-white/10 backdrop-blur-xl p-6">
           <div class="flex items-center gap-4 mb-3">
-            <div class="w-12 h-12 rounded-full bg-gradient-to-r from-[#8B4513] to-[#D2B48C] flex items-center justify-center text-white font-bold">
-              <?php echo strtoupper(substr($rName,0,1)); ?>
-            </div>
+            <div class="w-12 h-12 rounded-full text-black font-bold flex items-center justify-center" style="background:linear-gradient(135deg,#FF7F00,#FF4500)"><?php echo strtoupper(substr($rName,0,1)); ?></div>
             <div>
               <h3 class="text-lg font-bold text-white leading-tight"><?php echo $rName; ?></h3>
-              <div class="text-base" style="color:#FFD166">
-                <?php
-                  for($i=1;$i<=5;$i++){
-                    echo $i <= $rRate ? '<i class="fas fa-star mr-0.5"></i>' : '<i class="far fa-star mr-0.5"></i>';
-                  }
-                ?>
+              <div class="text-base" style="color:#FFA500">
+                <?php for($i=1;$i<=5;$i++){ echo $i <= $rRate ? '<i class="fas fa-star mr-0.5"></i>' : '<i class="far fa-star mr-0.5"></i>'; } ?>
               </div>
             </div>
           </div>
@@ -668,7 +527,7 @@ if (
       <?php
             endwhile;
           else:
-            echo '<div class="col-span-full text-center text-gray-300">No customer reviews yet. Be the first to leave one!</div>';
+            echo '<div class="col-span-full text-center text-gray-200">No customer reviews yet. Be the first to leave one!</div>';
           endif;
         } catch (Exception $e) {
           echo '<div class="col-span-full text-center text-red-200">Failed to load reviews.</div>';
@@ -678,49 +537,36 @@ if (
   </div>
 </section>
 
-<!-- ----------------------------- -->
-<!-- Client Review Form (NEW) -->
-<!-- ----------------------------- -->
+<!-- Review Form -->
 <section id="leave-review" class="py-20 relative">
   <div class="container mx-auto px-6 lg:px-12">
     <div class="text-center mb-12">
       <h2 class="text-4xl lg:text-5xl font-bold mb-4 text-white">Leave a Review</h2>
-      <p class="text-lg text-gray-300 max-w-2xl mx-auto">
-        Share your experience with Kandu Pinnawala. Your feedback helps us and other customers!
-      </p>
-      <div class="h-1 w-24 bg-gradient-to-r from-[#8B4513] to-[#D2B48C] rounded-full mx-auto mt-6"></div>
+      <p class="text-lg text-gray-200 max-w-2xl mx-auto">Share your experience with Kandu Pinnawala. Your feedback helps us and other customers!</p>
+      <div class="h-1 w-28 rounded-full mx-auto mt-6" style="background:linear-gradient(90deg,#FF7F00,#FF4500)"></div>
     </div>
 
     <form action="" method="POST" enctype="multipart/form-data" class="max-w-4xl mx-auto">
       <div class="glass-effect rounded-3xl p-8 md:p-10 shadow-xl border border-white/20">
-        <!-- Grid -->
         <div class="grid md:grid-cols-2 gap-6">
           <div>
             <label class="block text-sm font-semibold text-gray-200 mb-2">Full Name</label>
-            <input type="text" name="review_name" required
-                   class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:ring-2 focus:ring-[rgba(139,69,19,0.7)]"
-                   placeholder="e.g., Nimal Perera">
+            <input type="text" name="review_name" required class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:ring-2" style="--tw-ring-color: rgba(255,127,0,.7)" placeholder="e.g., Nimal Perera">
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-gray-2 00 mb-2">Email</label>
-            <input type="email" name="review_email" required
-                   class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:ring-2 focus:ring-[rgba(139,69,19,0.7)]"
-                   placeholder="you@example.com">
+            <label class="block text-sm font-semibold text-gray-200 mb-2">Email</label>
+            <input type="email" name="review_email" required class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:ring-2" style="--tw-ring-color: rgba(255,127,0,.7)" placeholder="you@example.com">
           </div>
 
           <div>
             <label class="block text-sm font-semibold text-gray-200 mb-2">Order ID (optional)</label>
-            <input type="text" name="review_order"
-                   class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:ring-2 focus:ring-[rgba(139,69,19,0.7)]"
-                   placeholder="e.g., KP-2025-00123">
+            <input type="text" name="review_order" class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:ring-2" style="--tw-ring-color: rgba(255,127,0,.7)" placeholder="e.g., KP-2025-00123">
           </div>
 
           <div>
             <label class="block text-sm font-semibold text-gray-200 mb-2">Review Title</label>
-            <input type="text" name="review_title" required
-                   class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:ring-2 focus:ring-[rgba(139,69,19,0.7)]"
-                   placeholder="e.g., Beautiful craftsmanship!">
+            <input type="text" name="review_title" required class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:ring-2" style="--tw-ring-color: rgba(255,127,0,.7)" placeholder="e.g., Beautiful craftsmanship!">
           </div>
         </div>
 
@@ -728,22 +574,9 @@ if (
         <div class="mt-6">
           <label class="block text-sm font-semibold text-gray-200 mb-2">Rating</label>
           <div class="flex items-center gap-2" id="ratingStars" data-selected="0">
-            <!-- Five star buttons -->
-            <button type="button" aria-label="1 star" data-value="1" class="star-btn w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20">
-              <i class="fa-solid fa-star"></i>
-            </button>
-            <button type="button" aria-label="2 stars" data-value="2" class="star-btn w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20">
-              <i class="fa-solid fa-star"></i>
-            </button>
-            <button type="button" aria-label="3 stars" data-value="3" class="star-btn w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20">
-              <i class="fa-solid fa-star"></i>
-            </button>
-            <button type="button" aria-label="4 stars" data-value="4" class="star-btn w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20">
-              <i class="fa-solid fa-star"></i>
-            </button>
-            <button type="button" aria-label="5 stars" data-value="5" class="star-btn w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20">
-              <i class="fa-solid fa-star"></i>
-            </button>
+            <?php for($i=1;$i<=5;$i++): ?>
+              <button type="button" aria-label="<?php echo $i; ?> star" data-value="<?php echo $i; ?>" class="star-btn w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20"><i class="fa-solid fa-star"></i></button>
+            <?php endfor; ?>
           </div>
           <input type="hidden" name="review_rating" id="review_rating" value="0">
         </div>
@@ -751,23 +584,17 @@ if (
         <!-- Message -->
         <div class="mt-6">
           <label class="block text-sm font-semibold text-gray-200 mb-2">Your Review</label>
-          <textarea name="review_message" rows="5" required
-                    class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:ring-2 focus:ring-[rgba(139,69,19,0.7)]"
-                    placeholder="Tell us about the product quality, delivery, and your experience."></textarea>
-          <div class="flex items-center justify-between mt-2 text-xs text-gray-300">
-            <span>Be respectful. Keep it helpful for other shoppers.</span>
-            <span id="charCount">0/1000</span>
-          </div>
+          <textarea name="review_message" rows="5" required class="w-full px-4 py-3 rounded-xl bg-white/10 text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:ring-2" style="--tw-ring-color: rgba(255,127,0,.7)" placeholder="Tell us about the product quality, delivery, and your experience."></textarea>
+          <div class="flex items-center justify-between mt-2 text-xs text-gray-300"><span>Be respectful. Keep it helpful for other shoppers.</span><span id="charCount">0/1000</span></div>
         </div>
 
-        <!-- Image upload -->
+        <!-- Image upload + agree -->
         <div class="mt-6 grid md:grid-cols-2 gap-6">
           <div>
             <label class="block text-sm font-semibold text-gray-200 mb-2">Add a photo (optional)</label>
-            <input type="file" name="review_image" accept="image/*"
-                   class="w-full file:mr-4 file:rounded-lg file:border-0 file:px-4 file:py-2 file:bg-gradient-to-r file:from-[#8B4513] file:to-[#D2B48C] file:text-white file:cursor-pointer rounded-xl bg-white/10 text-white border border-white/20">
+            <input type="file" name="review_image" accept="image/*" class="w-full file:mr-4 file:rounded-lg file:border-0 file:px-4 file:py-2 file:text-black file:cursor-pointer rounded-xl bg-white/10 text-white border border-white/20"
+                   onfocus="this.style.boxShadow='0 0 0 2px rgba(255,127,0,.7)'" onblur="this.style.boxShadow='none'">
           </div>
-
           <div class="flex items-center gap-2 mt-8 md:mt-0">
             <input id="agree" type="checkbox" required class="w-4 h-4 rounded border-white/30 bg-white/10">
             <label for="agree" class="text-sm text-gray-300">I agree to have my review displayed on the website.</label>
@@ -776,107 +603,75 @@ if (
 
         <!-- Submit -->
         <div class="mt-8 flex items-center gap-4">
-          <button type="submit"
-                  class="inline-flex items-center bg-gradient-to-r from-[#8B4513] to-[#D2B48C] text-white px-8 py-3 rounded-xl font-semibold hover:shadow-xl hover:shadow-[rgba(139,69,19,0.25)] transition">
+          <button type="submit" class="inline-flex items-center text-black px-9 py-3 rounded-xl font-semibold hover:shadow-xl transition" style="background:linear-gradient(90deg,#FF7F00,#FF4500); box-shadow:0 12px 28px rgba(255,127,0,.22);">
             <i class="fa-solid fa-paper-plane mr-2"></i> Submit Review
           </button>
-          <span class="text-xs text-gray-300">*This form is UI only. Backend not included.</span>
+          <span class="text-xs text-gray-300">*Backend included above for saving reviews.</span>
         </div>
       </div>
     </form>
   </div>
 </section>
-<!-- /Client Review Form -->
 
 <?php include 'footer.php'; ?>
 
 <script>
-   function toggleChat() {
+   function toggleChat(){
       const chatInterface = document.getElementById('chatInterface');
-      if (chatInterface.style.display === 'none') {
+      if (chatInterface.style.display === 'none'){
          chatInterface.style.display = 'block';
-         setTimeout(() => {
-            chatInterface.classList.remove('translate-y-full', 'opacity-0');
-         }, 10);
+         setTimeout(()=> chatInterface.classList.remove('translate-y-full','opacity-0'), 10);
       } else {
-         chatInterface.classList.add('translate-y-full', 'opacity-0');
-         setTimeout(() => {
-            chatInterface.style.display = 'none';
-         }, 300);
+         chatInterface.classList.add('translate-y-full','opacity-0');
+         setTimeout(()=> chatInterface.style.display = 'none', 300);
       }
    }
 
-   function sendMessage() {
+   function sendMessage(){
       const input = document.getElementById('chatInput');
       const messages = document.getElementById('chatMessages');
-      
-      if (input.value.trim()) {
-         // Add user message
-         messages.innerHTML += `
-            <div class="text-right">
-               <div class="inline-block bg-gradient-to-r from-[#8B4513] to-[#D2B48C] p-3 rounded-lg max-w-xs">
-                  <p class="text-sm text-white">${input.value}</p>
-               </div>
-            </div>
-         `;
-         
-         // Simulate AI response
-         setTimeout(() => {
-            messages.innerHTML += `
-               <div class="bg-[rgba(139,69,19,0.2)] p-3 rounded-lg">
-                  <p class="text-sm text-gray-300">Thank you for your interest! Our team will help you find the perfect handicraft. Please browse our categories or contact us directly.</p>
-               </div>
-            `;
-            messages.scrollTop = messages.scrollHeight;
-         }, 800);
-         
+      if (input.value.trim()){
+         messages.innerHTML += `<div class="text-right"><div class="inline-block p-3 rounded-lg max-w-xs text-black" style="background:linear-gradient(90deg,#FF7F00,#FF4500)"><p class="text-sm">${input.value}</p></div></div>`;
+         setTimeout(()=>{
+           messages.innerHTML += `<div class="p-3 rounded-lg" style="background:rgba(255,127,0,.15)"><p class="text-sm text-gray-200">Thank you! Our team will help you find the perfect handicraft.</p></div>`;
+           messages.scrollTop = messages.scrollHeight;
+         },800);
          input.value = '';
          messages.scrollTop = messages.scrollHeight;
       }
    }
 
-   // Add enter key support for chat
-   document.getElementById('chatInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') { sendMessage(); }
-   });
+   document.getElementById('chatInput').addEventListener('keypress', e=>{ if(e.key==='Enter'){ sendMessage(); } });
 
-   // Smooth scrolling for anchor links
-   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
+   // Smooth scroll for anchors
+   document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', e=>{
          e.preventDefault();
-         document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+         document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth'});
       });
    });
 
-   // --- Review form UX helpers (client-side only) ---
-   // Star rating
+   // Rating stars paint (orange)
    (function(){
       const container = document.getElementById('ratingStars');
       const hidden = document.getElementById('review_rating');
       if(!container || !hidden) return;
       const stars = Array.from(container.querySelectorAll('.star-btn'));
-      const activeColor = 'linear-gradient(135deg, #8B4513, #D2B48C)';
-      const inactiveBg = 'rgba(255,255,255,0.08)';
+      const activeBg = 'linear-gradient(135deg,#FF7F00,#FF4500)';
+      const inactiveBg = 'rgba(255,255,255,.08)';
 
       function paint(n){
-         stars.forEach((btn, i)=>{
-            btn.style.background = (i < n) ? activeColor : inactiveBg;
-            btn.style.borderColor = (i < n) ? 'rgba(210,180,140,0.6)' : 'rgba(255,255,255,0.2)';
-            btn.querySelector('i').style.color = (i < n) ? '#fff' : '#bbb';
+         stars.forEach((btn,i)=>{
+            btn.style.background = (i<n) ? activeBg : inactiveBg;
+            btn.style.borderColor = (i<n) ? 'rgba(255,205,150,.6)' : 'rgba(255,255,255,.2)';
+            btn.querySelector('i').style.color = (i<n) ? '#1A1200' : '#bbb';
          });
       }
-
       stars.forEach(btn=>{
-         btn.addEventListener('click', ()=>{
-            const v = Number(btn.dataset.value || 0);
-            hidden.value = v;
-            container.dataset.selected = v;
-            paint(v);
-         });
+         btn.addEventListener('click', ()=>{ const v = Number(btn.dataset.value||0); hidden.value = v; container.dataset.selected = v; paint(v); });
          btn.addEventListener('mouseenter', ()=> paint(Number(btn.dataset.value||0)));
          btn.addEventListener('mouseleave', ()=> paint(Number(container.dataset.selected||0)));
       });
-
       paint(0);
    })();
 
@@ -884,12 +679,11 @@ if (
    (function(){
       const ta = document.querySelector('textarea[name="review_message"]');
       const cc = document.getElementById('charCount');
-      if(!ta || !cc) return;
+      if(!ta||!cc) return;
       const max = 1000;
       ta.addEventListener('input', ()=>{
-         const len = ta.value.length;
-         cc.textContent = `${len}/${max}`;
-         if(len > max){ ta.value = ta.value.slice(0, max); }
+         const len = ta.value.length; cc.textContent = `${len}/${max}`;
+         if(len>max){ ta.value = ta.value.slice(0,max); }
       });
    })();
 </script>
