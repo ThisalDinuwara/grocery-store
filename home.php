@@ -169,12 +169,17 @@ if (
       * { margin:0; padding:0; box-sizing:border-box; }
 
       /* ===== Larger, fixed typography ===== */
-      html { font-size: 17px; } /* 1rem ≈ 17px */
-      h1 { font-size: 3.3rem; line-height: 1.2; }  /* ~56px */
-      h2 { font-size: 2.8rem; line-height: 1.25; } /* ~48px */
-      h3 { font-size: 2.3rem; line-height: 1.3; }  /* ~40px */
-      h4 { font-size: 1.7rem; line-height: 1.35;} /* ~28px */
-      p, label, input, button, a, li { font-size: 1.25rem; line-height:1.65; } /* ~20px */
+      html { font-size: 17px; }
+      h1 { font-size: 3.3rem; line-height: 1.2; }
+      h2 { font-size: 2.8rem; line-height: 1.25; }
+      h3 { font-size: 2.3rem; line-height: 1.3; }
+      h4 { font-size: 1.7rem; line-height: 1.35;}
+      p, label, input, button, a, li { font-size: 1.25rem; line-height:1.65; }
+
+      /* 🔸 Force orange/dark theme everywhere (prevents white flash/sections) */
+      html, body { background-color:#1A1200; }
+      /* 🔸 Ensure header brand text is white on all pages */
+      .header .logo { color:#fff !important; }
 
       body{
          font-family: 'Inter', sans-serif;
@@ -286,8 +291,10 @@ if (
                <span class="text-white">PINNAWALA</span>
             </h1>
             <div class="h-1 w-40 rounded-full" style="background:linear-gradient(90deg,#FF7F00,#FF4500)"></div>
-            <p class="text-xl text-gray-200 leading-relaxed max-w-2xl">
-               Discover the ultimate collection of traditional Sri Lankan handicrafts — now in a warm, modern orange theme.
+
+            <!-- BIGGER HERO PARAGRAPH -->
+            <p class="text-2xl lg:text-4xl text-gray-200 leading-relaxed max-w-3xl">
+               Discover the ultimate collection of traditional Sri Lankan handicrafts — now in a warm.
             </p>
          </div>
 
@@ -301,11 +308,20 @@ if (
             </button>
          </div>
 
-         <!-- Stats -->
-         <div class="flex space-x-8 pt-6">
-            <div class="text-center"><div class="text-4xl font-bold gradient-text">1000+</div><div class="text-gray-300 text-sm">Products</div></div>
-            <div class="text-center"><div class="text-4xl font-bold gradient-text">500+</div><div class="text-gray-300 text-sm">Happy Customers</div></div>
-            <div class="text-center"><div class="text-4xl font-bold gradient-text">50+</div><div class="text-gray-300 text-sm">Artisans</div></div>
+         <!-- Hero Stats -->
+         <div class="flex space-x-10 pt-6">
+            <div class="text-center">
+               <div class="text-5xl lg:text-7xl font-extrabold gradient-text">1000+</div>
+               <div class="text-gray-300 text-xl lg:text-2xl font-semibold">Products</div>
+            </div>
+            <div class="text-center">
+               <div class="text-5xl lg:text-7xl font-extrabold gradient-text">500+</div>
+               <div class="text-gray-300 text-xl lg:text-2xl font-semibold">Happy Customers</div>
+            </div>
+            <div class="text-center">
+               <div class="text-5xl lg:text-7xl font-extrabold gradient-text">50+</div>
+               <div class="text-gray-300 text-xl lg:text-2xl font-semibold">Artisans</div>
+            </div>
          </div>
       </div>
 
@@ -447,10 +463,22 @@ if (
    <div class="container mx-auto px-6 lg:px-12">
       <div class="glass-effect rounded-3xl p-12">
          <div class="grid md:grid-cols-4 gap-8 text-center">
-            <div><div class="text-5xl font-bold gradient-text mb-2">1000+</div><div class="text-gray-300">Premium Products</div></div>
-            <div><div class="text-5xl font-bold gradient-text mb-2">500+</div><div class="text-gray-300">Happy Customers</div></div>
-            <div><div class="text-5xl font-bold gradient-text mb-2">50+</div><div class="text-gray-300">Master Artisans</div></div>
-            <div><div class="text-5xl font-bold gradient-text mb-2">24/7</div><div class="text-gray-300">Customer Support</div></div>
+            <div>
+               <div class="text-5xl lg:text-7xl font-extrabold gradient-text mb-2">1000+</div>
+               <div class="text-gray-300 text-xl lg:text-2xl font-semibold">Premium Products</div>
+            </div>
+            <div>
+               <div class="text-5xl lg:text-7xl font-extrabold gradient-text mb-2">500+</div>
+               <div class="text-gray-300 text-xl lg:text-2xl font-semibold">Happy Customers</div>
+            </div>
+            <div>
+               <div class="text-5xl lg:text-7xl font-extrabold gradient-text mb-2">50+</div>
+               <div class="text-gray-300 text-xl lg:text-2xl font-semibold">Master Artisans</div>
+            </div>
+            <div>
+               <div class="text-5xl lg:text-7xl font-extrabold gradient-text mb-2">24/7</div>
+               <div class="text-gray-300 text-xl lg:text-2xl font-semibold">Customer Support</div>
+            </div>
          </div>
       </div>
    </div>
