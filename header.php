@@ -117,17 +117,10 @@ $current = basename($_SERVER['PHP_SELF'] ?? '');
     text-decoration: none;
     font-family: 'Orbitron', monospace;
     font-weight: 800;
-    font-size: 2.2rem !important;
+    font-size: 1.8rem;
     color: white !important;
     letter-spacing: 0.5px;
     transition: transform 0.3s ease;
-  }
-
-  /* Force font size override */
-  .header .logo,
-  header .logo,
-  a.logo {
-    font-size: 2.2rem !important;
   }
 
   .logo:hover {
@@ -181,18 +174,11 @@ $current = basename($_SERVER['PHP_SELF'] ?? '');
     text-decoration: none;
     color: white;
     font-weight: 600;
-    font-size: 1.2rem !important;
+    font-size: 1rem;
     padding: 12px 16px;
     border-radius: 12px;
     transition: all 0.3s ease;
     text-transform: capitalize;
-  }
-
-  /* Force navbar font size override */
-  .header .navbar a,
-  header .navbar a,
-  .navbar a {
-    font-size: 1.2rem !important;
   }
 
   .navbar a::before {
@@ -406,12 +392,6 @@ $current = basename($_SERVER['PHP_SELF'] ?? '');
       width: 100%;
       text-align: center;
       padding: 16px;
-      font-size: 1.1rem !important;
-    }
-
-    .header .navbar a,
-    header .navbar a {
-      font-size: 1.1rem !important;
     }
 
     .mobile-menu-btn {
@@ -419,13 +399,7 @@ $current = basename($_SERVER['PHP_SELF'] ?? '');
     }
 
     .logo {
-      font-size: 1.8rem !important;
-    }
-
-    .header .logo,
-    header .logo,
-    a.logo {
-      font-size: 1.8rem !important;
+      font-size: 1.5rem;
     }
 
     .logo-icon {
@@ -469,13 +443,7 @@ $current = basename($_SERVER['PHP_SELF'] ?? '');
     }
 
     .logo {
-      font-size: 1.6rem !important;
-    }
-
-    .header .logo,
-    header .logo,
-    a.logo {
-      font-size: 1.6rem !important;
+      font-size: 1.3rem;
     }
   }
 </style>
