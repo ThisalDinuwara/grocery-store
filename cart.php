@@ -53,7 +53,8 @@ if(isset($_POST['update_qty'])){
                   secondary: '#A0522D', // Sienna
                   accent: '#D2B48C',    // Tan
                   dark: '#3E2723',      // Dark Brown
-                  wood: '#5D4037'
+                  wood: '#5D4037',
+                  orange: '#FF6B35'     // Orange for headings
                },
                boxShadow: {
                   'neon': '0 0 20px rgba(139, 69, 19, 0.5), 0 0 40px rgba(160, 82, 45, 0.3), 0 0 60px rgba(210, 180, 140, 0.2)'
@@ -109,9 +110,23 @@ if(isset($_POST['update_qty'])){
          50% { transform: translateY(-10px); }
       }
 
+      /* Updated gradient text for orange color */
       .gradient-text {
-         background: linear-gradient(45deg, #8B4513, #A0522D, #D2B48C);
-         -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+         background: linear-gradient(45deg, #FF6B35, #FF8C42, #FFA366);
+         -webkit-background-clip: text; 
+         -webkit-text-fill-color: transparent; 
+         background-clip: text;
+         color: #FF6B35; /* Fallback color */
+      }
+
+      /* Orange color for specific headings */
+      .orange-text {
+         color: #FF6B35 !important;
+      }
+
+      /* Ensure all other text is white */
+      .white-text {
+         color: white !important;
       }
 
       .cyber-border {
@@ -147,10 +162,20 @@ if(isset($_POST['update_qty'])){
       .text-base{font-size:1.125rem!important;}  /* 18px */
       .text-lg{font-size:1.25rem!important;}     /* 20px */
       .text-xl{font-size:1.375rem!important;}    /* 22px */
-      p, label, input, button, a, li { font-size:1.12rem; }
+      p, label, input, button, a, li { font-size:1.12rem; color: white; }
 
       /* Product-like card polish (used for cart items) */
       .card-sheen{ background: radial-gradient(600px 120px at 20% 0%, rgba(210,180,140,.18), transparent 60%); }
+
+      /* Ensure all text elements are white by default */
+      h1, h2, h3, h4, h5, h6, p, span, label, input, button, a, li, div {
+         color: white;
+      }
+
+      /* Force white color for specific elements */
+      .force-white {
+         color: white !important;
+      }
    </style>
 </head>
 <body>
@@ -174,9 +199,9 @@ $cart_items = $select_cart->fetchAll(PDO::FETCH_ASSOC);
   <div class="container mx-auto px-6 lg:px-12 grid lg:grid-cols-3 gap-8 items-start relative z-10 w-full">
     <div class="lg:col-span-3 text-center mb-6">
       <h2 class="text-4xl lg:text-5xl font-extrabold tracking-tight">
-        <span class="gradient-text">Shopping Cart</span>
+        <span class="gradient-text">SHOPPING CART</span>
       </h2>
-      <p class="mt-3 text-lg text-white/80">Review items, update quantities, or proceed to checkout.</p>
+      <p class="mt-3 text-lg force-white">Review items, update quantities, or proceed to checkout.</p>
     </div>
 
     <?php if(count($cart_items) > 0): ?>
@@ -190,20 +215,20 @@ $cart_items = $select_cart->fetchAll(PDO::FETCH_ASSOC);
               class="group glass-effect neon-glow rounded-3xl overflow-hidden border border-[rgba(210,180,140,0.28)]">
           <!-- Card header -->
           <div class="px-4 py-3 flex items-center justify-between bg-gradient-to-r from-primary/70 to-accent/60 backdrop-blur">
-            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-effect text-white text-sm font-bold border border-[rgba(255,255,255,0.25)]">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-effect force-white text-sm font-bold border border-[rgba(255,255,255,0.25)]">
               <i class="fas fa-tag text-accent"></i>
-              Rs <?= number_format((float)$fetch_cart['price'], 2); ?>/-
+              <span class="force-white">Rs <?= number_format((float)$fetch_cart['price'], 2); ?>/-</span>
             </div>
             <div class="flex items-center gap-2">
               <a href="view_page.php?pid=<?= (int)$fetch_cart['pid']; ?>"
-                 class="w-10 h-10 glass-effect rounded-full flex items-center justify-center text-white hover-glow border border-[rgba(255,255,255,0.25)]"
+                 class="w-10 h-10 glass-effect rounded-full flex items-center justify-center force-white hover-glow border border-[rgba(255,255,255,0.25)]"
                  title="View item">
-                <i class="fas fa-eye"></i>
+                <i class="fas fa-eye force-white"></i>
               </a>
               <a href="cart.php?delete=<?= (int)$fetch_cart['id']; ?>" onclick="return confirm('Delete this from cart?');"
-                 class="w-10 h-10 glass-effect rounded-full flex items-center justify-center text-white hover-glow border border-[rgba(255,255,255,0.25)]"
+                 class="w-10 h-10 glass-effect rounded-full flex items-center justify-center force-white hover-glow border border-[rgba(255,255,255,0.25)]"
                  title="Remove">
-                <i class="fas fa-times"></i>
+                <i class="fas fa-times force-white"></i>
               </a>
             </div>
           </div>
@@ -219,19 +244,19 @@ $cart_items = $select_cart->fetchAll(PDO::FETCH_ASSOC);
               </div>
 
               <div class="flex-1">
-                <h3 class="text-xl font-bold text-white mb-2"><?= htmlspecialchars($fetch_cart['name']); ?></h3>
+                <h3 class="text-xl font-bold force-white mb-2"><?= htmlspecialchars($fetch_cart['name']); ?></h3>
 
                 <input type="hidden" name="cart_id" value="<?= (int)$fetch_cart['id']; ?>">
 
                 <div class="grid sm:grid-cols-2 gap-4 items-end">
                   <!-- Qty control -->
                   <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">Quantity</label>
+                    <label class="block text-sm font-medium force-white mb-2">Quantity</label>
                     <div class="flex items-center gap-2">
                       <input type="number" min="1" name="p_qty" value="<?= (int)$fetch_cart['quantity']; ?>"
-                             class="w-28 px-4 py-3 rounded-xl bg-[rgba(255,255,255,0.08)] text-white border border-[rgba(255,255,255,0.18)] focus:outline-none focus:ring-2 focus:ring-accent/50">
+                             class="w-28 px-4 py-3 rounded-xl bg-[rgba(255,255,255,0.08)] force-white border border-[rgba(255,255,255,0.18)] focus:outline-none focus:ring-2 focus:ring-accent/50">
                       <button type="submit" name="update_qty"
-                              class="px-4 py-3 rounded-xl font-semibold glass-effect hover-glow">
+                              class="px-4 py-3 rounded-xl font-semibold glass-effect hover-glow force-white">
                         Update
                       </button>
                     </div>
@@ -239,8 +264,8 @@ $cart_items = $select_cart->fetchAll(PDO::FETCH_ASSOC);
 
                   <!-- Subtotal -->
                   <div class="sm:text-right">
-                    <p class="text-sm text-white/70 mb-1">Sub Total</p>
-                    <p class="text-2xl font-extrabold text-white">
+                    <p class="text-sm force-white mb-1">Sub Total</p>
+                    <p class="text-2xl font-extrabold force-white">
                       Rs <?= number_format($sub_total, 2); ?>/-
                     </p>
                   </div>
@@ -255,31 +280,35 @@ $cart_items = $select_cart->fetchAll(PDO::FETCH_ASSOC);
       <!-- Summary -->
       <div class="glass-effect neon-glow rounded-3xl overflow-hidden border border-[rgba(210,180,140,0.28)] h-max">
         <div class="px-4 py-3 bg-gradient-to-r from-primary/70 to-accent/60 backdrop-blur">
-          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-effect text-white text-sm font-bold border border-[rgba(255,255,255,0.25)]">
-            <i class="fas fa-receipt text-accent"></i> Order Summary
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-effect force-white text-sm font-bold border border-[rgba(255,255,255,0.25)]">
+            <i class="fas fa-receipt text-accent"></i> 
+            <span class="force-white">Order Summary</span>
           </div>
         </div>
 
         <div class="p-6">
           <div class="rounded-2xl bg-[rgba(255,255,255,0.06)] p-4 space-y-2 border border-[rgba(255,255,255,0.12)]">
-            <div class="flex items-center justify-between text-white/80">
-              <span>Items</span><span><?= count($cart_items); ?></span>
+            <div class="flex items-center justify-between">
+              <span class="force-white">Items</span>
+              <span class="force-white"><?= count($cart_items); ?></span>
             </div>
-            <div class="flex items-center justify-between text-white/80">
-              <span>Subtotal</span><span>Rs <?= number_format($grand_total, 2); ?>/-</span>
+            <div class="flex items-center justify-between">
+              <span class="force-white">Subtotal</span>
+              <span class="force-white">Rs <?= number_format($grand_total, 2); ?>/-</span>
             </div>
-            <div class="flex items-center justify-between text-white/80">
-              <span>Shipping</span><span>FREE</span>
+            <div class="flex items-center justify-between">
+              <span class="force-white">Shipping</span>
+              <span class="force-white">FREE</span>
             </div>
             <div class="pt-3 border-t border-white/10 flex items-center justify-between">
-              <span class="text-lg font-bold text-white">Grand Total</span>
-              <span class="text-lg font-extrabold text-white">Rs <?= number_format($grand_total, 2); ?>/-</span>
+              <span class="text-lg font-bold force-white">Grand Total</span>
+              <span class="text-lg font-extrabold force-white">Rs <?= number_format($grand_total, 2); ?>/-</span>
             </div>
           </div>
 
           <div class="mt-6 grid gap-3">
             <a href="shop.php"
-               class="text-center glass-effect rounded-xl py-3 font-semibold text-white hover-glow border border-[rgba(255,255,255,0.25)]">
+               class="text-center glass-effect rounded-xl py-3 font-semibold force-white hover-glow border border-[rgba(255,255,255,0.25)]">
               Continue Shopping
             </a>
 
@@ -289,7 +318,7 @@ $cart_items = $select_cart->fetchAll(PDO::FETCH_ASSOC);
             </a>
 
             <a href="checkout.php"
-               class="text-center bg-gradient-to-r from-primary to-accent text-white py-4 rounded-xl font-semibold hover-glow neon-glow <?= ($grand_total > 0)?'':'pointer-events-none opacity-50'; ?>">
+               class="text-center bg-gradient-to-r from-primary to-accent force-white py-4 rounded-xl font-semibold hover-glow neon-glow <?= ($grand_total > 0)?'':'pointer-events-none opacity-50'; ?>">
               Proceed to Checkout
             </a>
           </div>
@@ -298,9 +327,9 @@ $cart_items = $select_cart->fetchAll(PDO::FETCH_ASSOC);
     <?php else: ?>
       <div class="lg:col-span-3 text-center py-16 glass-effect rounded-3xl border border-[rgba(255,255,255,0.18)]">
         <i class="fas fa-box-open text-6xl text-white/30 mb-4"></i>
-        <p class="text-2xl text-white/80 font-medium">Your cart is empty</p>
+        <p class="text-2xl force-white font-medium">Your cart is empty</p>
         <a href="shop.php"
-           class="mt-6 inline-flex items-center justify-center bg-gradient-to-r from-primary to-accent text-white px-6 py-3 rounded-xl font-semibold hover-glow neon-glow">
+           class="mt-6 inline-flex items-center justify-center bg-gradient-to-r from-primary to-accent force-white px-6 py-3 rounded-xl font-semibold hover-glow neon-glow">
           <i class="fas fa-store mr-2"></i> Shop Now
         </a>
       </div>
