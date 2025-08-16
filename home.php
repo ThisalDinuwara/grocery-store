@@ -68,7 +68,7 @@ if (
    $rev_order  = trim(filter_var($_POST['review_order'] ?? '', FILTER_SANITIZE_STRING));
    $rev_title  = trim(filter_var($_POST['review_title'] ?? '', FILTER_SANITIZE_STRING));
    $rev_msg    = trim(filter_var($_POST['review_message'] ?? '', FILTER_SANITIZE_STRING));
-   $rev_rating = (int)$_POST['review_rating'] ?? 0;
+   $rev_rating = (int)($_POST['review_rating'] ?? 0);
 
    $errors = [];
    if ($rev_name === '')   { $errors[] = 'Name is required.'; }
@@ -271,6 +271,12 @@ if (
       .product-card label{ color:#FFE4C4; font-weight:600; }
       .product-card .qty{ background: rgba(255,255,255,.08); }
       .product-card .qty:focus{ outline:none; box-shadow:0 0 0 3px rgba(255,127,0,.35); }
+
+      /* === BIGGER KANDU PINNAWALA (only hero) === */
+      .hero-bg h1{
+         font-size: clamp(3.8rem, 6.5vw, 9rem);
+         line-height: 1.1;
+      }
    </style>
 </head>
 <body>
@@ -286,7 +292,8 @@ if (
       <!-- Content -->
       <div class="space-y-8">
          <div class="space-y-6">
-            <h1 class="text-6xl lg:text-8xl font-bold leading-tight">
+            <!-- bumped sizes here -->
+            <h1 class="text-7xl lg:text-9xl font-bold leading-tight">
                <span class="gradient-text font-gaming">KANDU</span><br>
                <span class="text-white">PINNAWALA</span>
             </h1>

@@ -22,11 +22,11 @@ if(!isset($user_id)){
          theme: {
             extend: {
                colors: {
-                  primary: '#8B4513',   // Saddle Brown
-                  secondary: '#A0522D', // Sienna
-                  accent: '#D2B48C',    // Tan
-                  dark: '#3E2723',      // Dark Brown
-                  darker: '#1B0F0A'     // Deep Brown
+                  primary: '#8B4513',
+                  secondary: '#A0522D',
+                  accent: '#D2B48C',
+                  dark: '#3E2723',
+                  darker: '#1B0F0A'
                },
                fontFamily: {
                   'gaming': ['Orbitron', 'monospace']
@@ -38,53 +38,58 @@ if(!isset($user_id)){
 
    <!-- Font Awesome -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-
-   <!-- Optional: your site css (kept) -->
    <link rel="stylesheet" href="css/style.css">
 
-   <!-- Devil Mask Animation Styles (unchanged layout; only colors come from page bg) -->
+   <!-- Font size overrides -->
+   <style>
+      body {
+         font-size: 1.25rem; /* ~20px */
+         line-height: 1.8;
+      }
+      h1 { font-size: 3rem !important; }
+      h2 { font-size: 2.75rem !important; }
+      h3 { font-size: 2rem !important; }
+      h4, h5, h6 { font-size: 1.5rem !important; }
+      p, li { font-size: 1.25rem !important; }
+      .text-sm { font-size: 1.125rem !important; }
+      .text-xs { font-size: 1rem !important; }
+      a, button { font-size: 1.25rem !important; }
+      #reviews h2 { font-size: 3rem !important; }
+      #reviews p { font-size: 1.25rem !important; }
+   </style>
+
+   <!-- Floating masks -->
    <style>
       .floating-bg {
          position: absolute; top: 0; left: 0; width: 100%; height: 100%;
          z-index: 0; overflow: hidden; pointer-events: none;
       }
       .floating-mask { position: absolute; width: 100px; opacity: .5; animation: floatRotate 20s ease-in-out infinite; }
-
-      /* Row 1 - Top */
       .floating-mask:nth-child(1) { top: 2%; left: 8%; animation-delay: 0s; width: 80px; }
       .floating-mask:nth-child(2) { top: 5%; left: 25%; animation-delay: 2s; width: 90px; }
       .floating-mask:nth-child(3) { top: 3%; left: 45%; animation-delay: 4s; width: 85px; }
       .floating-mask:nth-child(4) { top: 7%; left: 65%; animation-delay: 1s; width: 95px; }
       .floating-mask:nth-child(5) { top: 4%; left: 85%; animation-delay: 3s; width: 75px; }
-
-      /* Row 2 - Upper Middle */
       .floating-mask:nth-child(6) { top: 20%; left: 5%; animation-delay: 5s; width: 85px; }
       .floating-mask:nth-child(7) { top: 18%; left: 22%; animation-delay: 1.5s; width: 90px; }
       .floating-mask:nth-child(8) { top: 22%; left: 42%; animation-delay: 3.5s; width: 80px; }
       .floating-mask:nth-child(9) { top: 19%; left: 62%; animation-delay: 6s; width: 95px; }
       .floating-mask:nth-child(10){ top: 24%; left: 82%; animation-delay: .5s; width: 75px; }
-
-      /* Row 3 - Middle */
       .floating-mask:nth-child(11){ top: 38%; left: 10%; animation-delay: 2.5s; width: 90px; }
       .floating-mask:nth-child(12){ top: 35%; left: 30%; animation-delay: 4.5s; width: 85px; }
       .floating-mask:nth-child(13){ top: 40%; left: 50%; animation-delay: 1.2s; width: 100px; }
       .floating-mask:nth-child(14){ top: 37%; left: 70%; animation-delay: 5.5s; width: 80px; }
       .floating-mask:nth-child(15){ top: 42%; left: 88%; animation-delay: 3.2s; width: 95px; }
-
-      /* Row 4 - Lower Middle */
       .floating-mask:nth-child(16){ top: 58%; left: 3%; animation-delay: 6.5s; width: 85px; }
       .floating-mask:nth-child(17){ top: 55%; left: 25%; animation-delay: 2.8s; width: 90px; }
       .floating-mask:nth-child(18){ top: 60%; left: 45%; animation-delay: 4.8s; width: 75px; }
       .floating-mask:nth-child(19){ top: 57%; left: 67%; animation-delay: 1.8s; width: 95px; }
       .floating-mask:nth-child(20){ top: 62%; left: 85%; animation-delay: 5.8s; width: 80px; }
-
-      /* Row 5 - Bottom */
       .floating-mask:nth-child(21){ top: 78%; left: 12%; animation-delay: 3.8s; width: 90px; }
       .floating-mask:nth-child(22){ top: 75%; left: 32%; animation-delay: 6.2s; width: 85px; }
       .floating-mask:nth-child(23){ top: 80%; left: 52%; animation-delay: 2.2s; width: 95px; }
       .floating-mask:nth-child(24){ top: 77%; left: 72%; animation-delay: 4.2s; width: 80px; }
       .floating-mask:nth-child(25){ top: 82%; left: 90%; animation-delay: 1.5s; width: 75px; }
-
       @keyframes floatRotate {
          0%{transform:translateY(0) rotate(0)}
          50%{transform:translateY(-30px) rotate(180deg)}
@@ -93,75 +98,35 @@ if(!isset($user_id)){
    </style>
 </head>
 
-<!-- Dark brown gradient background to match home -->
 <body class="min-h-screen text-white" style="background: linear-gradient(135deg, #1B0F0A 0%, #3E2723 50%, #5D4037 100%);">
 
-<!-- ======================== -->
-<!-- ABOUT SECTION -->
-<!-- ======================== -->
 <div class="relative w-full min-h-[100vh] overflow-hidden">
-   <!-- Floating devil mask background -->
    <div class="floating-bg">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
-      <img src="images/mask8.png" class="floating-mask" alt="mask">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
-      <img src="images/mask8.png" class="floating-mask" alt="mask">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
-      <img src="images/mask8.png" class="floating-mask" alt="mask">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
-      <img src="images/mask8.png" class="floating-mask" alt="mask">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
-      <img src="images/mask8.png" class="floating-mask" alt="mask">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
-      <img src="images/mask8.png" class="floating-mask" alt="mask">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
-      <img src="images/mask8.png" class="floating-mask" alt="mask">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
-      <img src="images/mask8.png" class="floating-mask" alt="mask">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
-      <img src="images/mask8.png" class="floating-mask" alt="mask">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
-      <img src="images/mask8.png" class="floating-mask" alt="mask">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
-      <img src="images/mask8.png" class="floating-mask" alt="mask">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
-      <img src="images/mask8.png" class="floating-mask" alt="mask">
-      <img src="images/mask7.png" class="floating-mask" alt="mask">
+      <?php for($m=1;$m<=25;$m++): ?>
+         <img src="images/mask<?= $m%2==0?8:7; ?>.png" class="floating-mask" alt="mask">
+      <?php endfor; ?>
    </div>
-
-   <!-- Soft readability scrim for dark bg -->
    <div class="absolute inset-0 z-[5] bg-gradient-to-b from-[rgba(27,15,10,0.85)] via-[rgba(62,39,35,0.7)] to-[rgba(27,15,10,0.2)]"></div>
 
-   <!-- ABOUT content -->
    <section class="relative z-10 py-20">
       <div class="container mx-auto px-6 lg:px-12 w-full">
-
-         <!-- Pop-out header -->
          <div class="text-center mb-12 relative z-10">
-            <!-- Accent pill -->
             <div class="inline-flex items-center gap-2 mb-5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur border border-white/20 shadow">
                <span class="w-2 h-2 rounded-full bg-gradient-to-r from-[#8B4513] to-[#D2B48C]"></span>
                <span class="text-sm font-semibold text-gray-200">Handcrafted in Sri Lanka</span>
             </div>
-
-            <!-- Title pill -->
-            <h2 class="text-4xl lg:text-6xl font-extrabold tracking-tight leading-tight">
+            <h2 class="font-extrabold tracking-tight leading-tight">
                <span class="inline-block px-6 py-3 rounded-2xl bg-white/10 text-white backdrop-blur-xl border border-white/20 shadow-2xl">
                  About Kandu Pinnawala
                </span>
             </h2>
-
-            <!-- Gradient underline -->
             <span class="block h-1 w-28 mx-auto mt-4 rounded-full bg-gradient-to-r from-[#8B4513] to-[#D2B48C]"></span>
-
             <p class="mt-5 text-xl text-gray-300 max-w-3xl mx-auto">
                Craft, culture, and passion — handmade in Sri Lanka
             </p>
          </div>
 
-         <!-- Glass cards -->
          <div class="grid md:grid-cols-2 gap-8">
-            <!-- Card 1 -->
             <div class="group relative rounded-3xl overflow-hidden shadow-lg border border-white/20 bg-white/10 backdrop-blur-xl transition hover:shadow-2xl hover:border-white/30">
                <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#8B4513] to-[#D2B48C]"></div>
                <div class="aspect-[4/3] bg-[rgba(67,40,24,0.15)] overflow-hidden">
@@ -170,7 +135,7 @@ if(!isset($user_id)){
                        onerror="this.src='images/about.png'">
                </div>
                <div class="p-6">
-                  <h3 class="text-xl font-bold text-white mb-3">Why choose us?</h3>
+                  <h3 class="font-bold text-white mb-3">Why choose us?</h3>
                   <p class="text-gray-200/90">Direct artisan partnerships, fair pricing, authentic designs, and premium materials.</p>
                   <ul class="mt-5 grid sm:grid-cols-2 gap-3 text-gray-200/90">
                      <li class="flex items-center gap-3"><i class="fas fa-check" style="color:#D2B48C"></i> Authentic craftsmanship</li>
@@ -185,7 +150,6 @@ if(!isset($user_id)){
                </div>
             </div>
 
-            <!-- Card 2 -->
             <div class="group relative rounded-3xl overflow-hidden shadow-lg border border-white/20 bg-white/10 backdrop-blur-xl transition hover:shadow-2xl hover:border-white/30">
                <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#8B4513] to-[#D2B48C]"></div>
                <div class="aspect-[4/3] bg-[rgba(67,40,24,0.15)] overflow-hidden">
@@ -194,7 +158,7 @@ if(!isset($user_id)){
                        onerror="this.src='images/cart.png'">
                </div>
                <div class="p-6">
-                  <h3 class="text-xl font-bold text-white mb-3">What we provide?</h3>
+                  <h3 class="font-bold text-white mb-3">What we provide?</h3>
                   <p class="text-gray-200/90">Curated masks, wood carvings, batik textiles & custom orders — every piece tells a story.</p>
                   <ul class="mt-5 grid sm:grid-cols-2 gap-3 text-gray-200/90">
                      <li class="flex items-center gap-3"><i class="fas fa-check" style="color:#D2B48C"></i> Devil masks</li>
@@ -213,13 +177,10 @@ if(!isset($user_id)){
    </section>
 </div>
 
-<!-- ======================== -->
-<!-- REVIEWS (now in dark theme to match) -->
-<!-- ======================== -->
 <section id="reviews" class="py-20">
    <div class="container mx-auto px-6 lg:px-12">
       <div class="text-center mb-16">
-         <h2 class="text-4xl lg:text-5xl font-bold text-white mb-4">Client Reviews</h2>
+         <h2 class="font-bold text-white mb-4">Client Reviews</h2>
          <p class="text-xl text-gray-300 max-w-3xl mx-auto">What our customers say about Kandu Pinnawala</p>
       </div>
 
@@ -227,12 +188,11 @@ if(!isset($user_id)){
          <?php for($i=1; $i<=6; $i++): ?>
          <div class="rounded-3xl overflow-hidden shadow-lg border border-white/15 bg-white/10 backdrop-blur-xl p-6">
             <div class="flex items-center gap-4 mb-4">
-               <!-- Smaller circular avatar -->
                <img src="images/pic-<?= $i; ?>.png" alt="Reviewer"
                     class="w-12 h-12 rounded-full object-cover border border-white/20"
                     onerror="this.src='images/pic-1.png'">
                <div>
-                  <h3 class="text-base font-bold text-white leading-tight">John Deo</h3>
+                  <h3 class="leading-tight">John Deo</h3>
                   <div class="text-xs" style="color:#FFD166">
                      <i class="fas fa-star mr-0.5"></i>
                      <i class="fas fa-star mr-0.5"></i>
@@ -242,8 +202,7 @@ if(!isset($user_id)){
                   </div>
                </div>
             </div>
-
-            <p class="text-gray-200 leading-relaxed">
+            <p class="leading-relaxed">
                “Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos minima eveniet dolorum possimus.”
             </p>
          </div>

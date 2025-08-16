@@ -13,260 +13,638 @@ if (isset($message)) {
 // Helper: work out current file for active nav state
 $current = basename($_SERVER['PHP_SELF'] ?? '');
 ?>
-<!-- Orange Theme Header -->
+
 <style>
   :root{
-    --kp-primary:  #FF7F00;  /* vivid orange */
-    --kp-secondary:#FF4500;  /* orange-red */
-    --kp-accent:   #FFA500;  /* classic orange */
-    --kp-dark:     #1A1200;  /* deep warm black */
-    --kp-darker:   #0D0900;  /* darkest */
-    --kp-white:    #ffffff;
-    --kp-muted:    #cfcfcf;
+    --kp-primary: #FF6B35;
+    --kp-secondary: #F7931E;
+    --kp-accent: #FFD23F;
+    --kp-dark: #2C1810;
+    --kp-darker: #1A0F08;
+    --kp-white: #ffffff;
+    --kp-muted: #E8E8E8;
+    --kp-glass: rgba(255, 255, 255, 0.1);
+    --kp-glass-border: rgba(255, 255, 255, 0.2);
   }
 
-  /* Flash message */
-  .kp-message{
-    position:fixed; top:18px; right:18px; z-index:10000;
-    display:flex; align-items:center; gap:.75rem;
-    padding:.9rem 1.1rem; border-radius:12px;
-    background: linear-gradient(90deg, var(--kp-primary), var(--kp-secondary));
-    color:#111; box-shadow:0 10px 24px rgba(255,127,0,.28);
-    border:1px solid rgba(255,255,255,.2);
-    font: 500 1rem/1.3 "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  }
-  .kp-message i{ cursor:pointer; opacity:.8; }
-  .kp-message i:hover{ opacity:1; }
-
-  /* Header base */
-  .header{
-    position:sticky; top:0; z-index:9999;
-    background: rgba(255,255,255,.06);
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-    border-bottom:1px solid rgba(255,255,255,.15);
-  }
-  .header .flex{
-    max-width:1200px; margin:0 auto; padding:16px 20px;
-    display:flex; align-items:center; justify-content:space-between; gap:14px;
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
 
-  /* Brand (FORCE WHITE) */
-  .header .logo{
-    display:inline-flex; align-items:center; gap:.5rem;
-    font-family: "Orbitron", monospace;
-    font-weight:900; letter-spacing:.5px;
-    font-size:1.6rem; text-decoration:none;
-    color:#fff !important; /* <- force white brand text */
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
-  .header .logo span{
-    display:inline-block; width:.65rem; height:.65rem; border-radius:50%;
+
+  /* Flash Messages */
+  .kp-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-radius: 16px;
     background: linear-gradient(135deg, var(--kp-primary), var(--kp-secondary));
-    box-shadow:0 0 0 3px rgba(255,127,0,.18);
+    color: white;
+    box-shadow: 0 20px 40px rgba(255, 107, 53, 0.3);
+    border: 1px solid var(--kp-glass-border);
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    animation: slideIn 0.3s ease-out;
   }
 
-  /* Navbar */
-  .navbar{
-    display:flex; gap:22px; align-items:center;
-  }
-  .navbar a{
-    position:relative; text-decoration:none;
-    color:var(--kp-white); opacity:.95;
-    font: 600 1.05rem/1 "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    padding:10px 6px; transition: color .2s ease, opacity .2s ease;
-  }
-  .navbar a:hover{ color:var(--kp-accent); opacity:1; }
-  .navbar a::after{
-    content:""; position:absolute; left:0; bottom:4px; height:2px; width:0;
-    background: linear-gradient(90deg, var(--kp-primary), var(--kp-secondary));
-    transition: width .25s ease;
-  }
-  .navbar a:hover::after{ width:100%; }
-
-  /* Active page indicator */
-  .navbar a.active{
-    color:var(--kp-accent);
-  }
-  .navbar a.active::after{
-    width:100%;
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
 
-  /* Icons row */
-  .icons{
-    display:flex; align-items:center; gap:16px; color:var(--kp-white);
-    font-size:1.2rem;
+  .kp-message i {
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
   }
-  .icons a, .icons i{
-    position:relative; display:inline-flex; align-items:center; justify-content:center;
-    width:42px; height:42px; border-radius:50%;
-    background: rgba(255,255,255,.06);
-    border:1px solid rgba(255,255,255,.15);
-    text-decoration:none; color:var(--kp-white);
-    transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
+
+  .kp-message i:hover {
+    opacity: 1;
   }
-  .icons a:hover, .icons i:hover{
+
+  /* Header */
+  .header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+    background: linear-gradient(135deg, #8B4513 0%, #D2691E 50%, #CD853F 100%) !important;
+    backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid var(--kp-glass-border) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+    width: 100% !important;
+    min-height: 80px !important;
+  }
+
+  .header::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+  }
+
+  .header-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 80px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Brand Logo */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    font-family: 'Orbitron', monospace;
+    font-weight: 800;
+    font-size: 2.2rem !important;
+    color: white !important;
+    letter-spacing: 0.5px;
+    transition: transform 0.3s ease;
+  }
+
+  /* Force font size override */
+  .header .logo,
+  header .logo,
+  a.logo {
+    font-size: 2.2rem !important;
+  }
+
+  .logo:hover {
+    transform: scale(1.05);
+  }
+
+  .logo-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--kp-primary), var(--kp-secondary));
+    flex-shrink: 0;
+  }
+
+  .logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  /* Hide the fallback icon when image loads */
+  .logo-icon:has(img)::before {
+    display: none;
+  }
+
+  /* Fallback icon when no image is provided */
+  .logo-icon::before {
+    content: '🏪';
+    font-size: 24px;
+    display: block;
+  }
+
+  /* Navigation */
+  .navbar {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+  }
+
+  .navbar a {
+    position: relative;
+    text-decoration: none;
+    color: white;
+    font-weight: 600;
+    font-size: 1.2rem !important;
+    padding: 12px 16px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    text-transform: capitalize;
+  }
+
+  /* Force navbar font size override */
+  .header .navbar a,
+  header .navbar a,
+  .navbar a {
+    font-size: 1.2rem !important;
+  }
+
+  .navbar a::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--kp-glass);
+    border-radius: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+
+  .navbar a:hover::before,
+  .navbar a.active::before {
+    opacity: 1;
+  }
+
+  .navbar a.active {
+    color: var(--kp-accent);
+    font-weight: 700;
+  }
+
+  .navbar a:hover {
+    color: var(--kp-accent);
     transform: translateY(-2px);
+  }
+
+  /* Icons Section */
+  .icons {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .icon-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--kp-glass);
+    border: 1px solid var(--kp-glass-border);
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+  }
+
+  .icon-btn:hover {
     background: linear-gradient(135deg, var(--kp-primary), var(--kp-secondary));
-    color:#111;
-    box-shadow:0 10px 20px rgba(255,127,0,.35);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(255, 107, 53, 0.4);
   }
 
-  /* Badges on wishlist/cart */
-  .icons a span{
-    position:absolute; top:-6px; right:-8px;
+  .icon-btn i {
+    font-size: 18px;
+  }
+
+  /* Badge */
+  .badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, var(--kp-accent), #FFB000);
+    color: var(--kp-darker);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 20px;
+    min-width: 20px;
+    text-align: center;
+    border: 2px solid white;
+    box-shadow: 0 4px 12px rgba(255, 210, 63, 0.4);
+  }
+
+  /* Profile Dropdown */
+  .profile-dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 24px;
+    width: 320px;
+    background: rgba(44, 24, 16, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--kp-glass-border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+  }
+
+  .profile-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .profile-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    object-fit: cover;
+    border: 3px solid var(--kp-glass-border);
+  }
+
+  .profile-name {
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .profile-btn {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .profile-btn.primary {
     background: linear-gradient(135deg, var(--kp-primary), var(--kp-secondary));
-    color:#111; font:700 .75rem/1 "Inter", sans-serif;
-    border-radius:999px; padding:.22rem .45rem;
-    border:1px solid rgba(0,0,0,.1);
-    box-shadow:0 4px 12px rgba(255,127,0,.28);
+    color: white;
+    box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
   }
 
-  /* Profile dropdown panel */
-  .profile{
-    position:absolute; top:74px; right:20px; width:280px;
-    background: rgba(0,0,0,.55);
-    border:1px solid rgba(255,255,255,.15);
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-    border-radius:16px; padding:16px; display:none; z-index:1000;
-    box-shadow:0 18px 40px rgba(0,0,0,.45);
-  }
-  .profile.active{ display:block; }
-  .profile img{
-    width:64px; height:64px; object-fit:cover; border-radius:50%;
-    border:2px solid rgba(255,255,255,.25);
-  }
-  .profile p{
-    margin-top:10px; font:700 1.05rem/1.2 "Inter", sans-serif; color:var(--kp-white);
+  .profile-btn.secondary {
+    background: var(--kp-glass);
+    color: white;
+    border: 1px solid var(--kp-glass-border);
   }
 
-  /* Buttons inside profile */
-  .profile .btn,
-  .profile .option-btn,
-  .profile .delete-btn{
-    display:block; width:100%; text-align:center;
-    margin-top:10px; padding:.75rem 1rem; border-radius:12px; text-decoration:none;
-    font:700 1rem/1 "Inter", sans-serif;
-    transition: transform .15s ease, box-shadow .2s ease, opacity .2s ease;
-  }
-  .profile .btn{
-    background: linear-gradient(135deg, var(--kp-primary), var(--kp-secondary));
-    color:#111; box-shadow:0 10px 18px rgba(255,127,0,.22);
-  }
-  .profile .option-btn{
-    background: rgba(255,255,255,.08); color:var(--kp-white); border:1px solid rgba(255,255,255,.15);
-  }
-  .profile .delete-btn{
-    background: rgba(255,69,0,.15); color:#ffd8cc; border:1px solid rgba(255,69,0,.35);
-  }
-  .profile .btn:hover,
-  .profile .option-btn:hover,
-  .profile .delete-btn:hover{ transform: translateY(-1px); opacity:.95; }
-
-  .profile .flex-btn{
-    display:flex; gap:10px; margin-top:10px;
+  .profile-btn.danger {
+    background: rgba(220, 53, 69, 0.2);
+    color: #ff6b6b;
+    border: 1px solid rgba(220, 53, 69, 0.3);
   }
 
-  /* Mobile menu toggle (hamburger) */
-  #menu-btn{ display:none; cursor:pointer; }
-  #user-btn{ cursor:pointer; }
+  .profile-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  }
 
-  @media (max-width: 992px){
-    .navbar{
-      position:absolute; top:74px; left:0; right:0;
-      flex-direction:column; gap:10px; padding:14px;
-      background: rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.15);
-      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-      display:none; margin:0 12px; border-radius:16px;
+  .auth-buttons {
+    display: flex;
+    gap: 12px;
+  }
+
+  .auth-buttons .profile-btn {
+    flex: 1;
+  }
+
+  /* Mobile Menu Button */
+  .mobile-menu-btn {
+    display: none;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 992px) {
+    .navbar {
+      position: absolute;
+      top: 100%;
+      left: 24px;
+      right: 24px;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(44, 24, 16, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--kp-glass-border);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
     }
-    .navbar.active{ display:flex; }
-    #menu-btn{ display:inline-flex; }
+
+    .navbar.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .navbar a {
+      width: 100%;
+      text-align: center;
+      padding: 16px;
+      font-size: 1.1rem !important;
+    }
+
+    .header .navbar a,
+    header .navbar a {
+      font-size: 1.1rem !important;
+    }
+
+    .mobile-menu-btn {
+      display: flex;
+    }
+
+    .logo {
+      font-size: 1.8rem !important;
+    }
+
+    .header .logo,
+    header .logo,
+    a.logo {
+      font-size: 1.8rem !important;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+    }
+
+    .icons {
+      gap: 12px;
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+    }
+  }
+
+  /* Additional override styles to ensure header background works */
+  header.header,
+  .header,
+  header {
+    background: linear-gradient(135deg, #8B4513 0%, #D2691E 50%, #CD853F 100%) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+  }
+  
+  /* Ensure no other styles override the header */
+  body .header {
+    background: linear-gradient(135deg, #8B4513 0%, #D2691E 50%, #CD853F 100%) !important;
+  }
+    .header-container {
+      padding: 0 16px;
+      height: 70px;
+    }
+
+    .profile-dropdown {
+      right: 16px;
+      width: calc(100vw - 32px);
+      max-width: 300px;
+    }
+
+    .logo {
+      font-size: 1.6rem !important;
+    }
+
+    .header .logo,
+    header .logo,
+    a.logo {
+      font-size: 1.6rem !important;
+    }
   }
 </style>
 
 <header class="header">
-  <div class="flex">
-    <!-- Brand -->
-    <a href="admin_page.php" class="logo">Kandu Pinnawala<span></span></a>
+  <div class="header-container">
+    <!-- Brand Logo -->
+    <a href="admin_page.php" class="logo">
+      <div class="logo-icon">
+        <!-- Replace with your actual logo path -->
+        <img src="images/logo.jpeg" alt="Kandu Pinnawala Logo" 
+             onerror="this.style.display='none'; this.parentElement.classList.add('no-logo');">
+      </div>
+      Kandu Pinnawala
+    </a>
 
-    <!-- Nav -->
-    <nav class="navbar" id="kp-navbar" role="navigation" aria-label="Primary">
-      <a href="home.php"   class="<?php echo $current==='home.php'   ? 'active' : ''; ?>" <?php echo $current==='home.php'   ? 'aria-current="page"' : ''; ?>>home</a>
-      <a href="shop.php"   class="<?php echo $current==='shop.php'   ? 'active' : ''; ?>" <?php echo $current==='shop.php'   ? 'aria-current="page"' : ''; ?>>shop</a>
-      <a href="orders.php" class="<?php echo $current==='orders.php' ? 'active' : ''; ?>" <?php echo $current==='orders.php' ? 'aria-current="page"' : ''; ?>>orders</a>
-      <!-- <a href="about.php" class="<?php // echo $current==='about.php' ? 'active' : ''; ?>">about</a> -->
-      <a href="contact.php" class="<?php echo $current==='contact.php' ? 'active' : ''; ?>" <?php echo $current==='contact.php' ? 'aria-current="page"' : ''; ?>>custom orders</a>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar" role="navigation" aria-label="Primary">
+      <a href="home.php" class="<?php echo $current === 'home.php' ? 'active' : ''; ?>" 
+         <?php echo $current === 'home.php' ? 'aria-current="page"' : ''; ?>>Home</a>
+      <a href="shop.php" class="<?php echo $current === 'shop.php' ? 'active' : ''; ?>" 
+         <?php echo $current === 'shop.php' ? 'aria-current="page"' : ''; ?>>Shop</a>
+      <a href="orders.php" class="<?php echo $current === 'orders.php' ? 'active' : ''; ?>" 
+         <?php echo $current === 'orders.php' ? 'aria-current="page"' : ''; ?>>Orders</a>
+      <a href="contact.php" class="<?php echo $current === 'contact.php' ? 'active' : ''; ?>" 
+         <?php echo $current === 'contact.php' ? 'aria-current="page"' : ''; ?>>Custom Orders</a>
     </nav>
 
-    <!-- Icons -->
+    <!-- Icons Section -->
     <div class="icons">
-      <i id="menu-btn" class="fas fa-bars" title="Menu" aria-label="Toggle menu"></i>
-      <i id="user-btn" class="fas fa-user" title="Account" aria-label="Toggle account panel"></i>
-      <a href="search_page.php" class="fas fa-search" title="Search" aria-label="Search"></a>
+      <!-- Mobile Menu Button -->
+      <div class="icon-btn mobile-menu-btn" id="mobile-menu-btn" title="Menu" aria-label="Toggle menu">
+        <i class="fas fa-bars"></i>
+      </div>
+
+      <!-- Search -->
+      <a href="search_page.php" class="icon-btn" title="Search" aria-label="Search">
+        <i class="fas fa-search"></i>
+      </a>
+
+      <!-- Wishlist -->
+      <?php
+        $count_wishlist_items = $conn->prepare("SELECT * FROM `wishlist` WHERE user_id = ?");
+        $count_wishlist_items->execute([$user_id]);
+        $wishlist_count = $count_wishlist_items->rowCount();
+      ?>
+      <a href="wishlist.php" class="icon-btn" title="Wishlist" aria-label="Wishlist">
+        <i class="fas fa-heart"></i>
+        <?php if($wishlist_count > 0): ?>
+          <span class="badge"><?= $wishlist_count; ?></span>
+        <?php endif; ?>
+      </a>
+
+      <!-- Cart -->
       <?php
         $count_cart_items = $conn->prepare("SELECT * FROM `cart` WHERE user_id = ?");
         $count_cart_items->execute([$user_id]);
-        $count_wishlist_items = $conn->prepare("SELECT * FROM `wishlist` WHERE user_id = ?");
-        $count_wishlist_items->execute([$user_id]);
+        $cart_count = $count_cart_items->rowCount();
       ?>
-      <a href="wishlist.php" title="Wishlist" aria-label="Wishlist">
-        <i class="fas fa-heart"></i>
-        <span>(<?= $count_wishlist_items->rowCount(); ?>)</span>
-      </a>
-      <a href="cart.php" title="Cart" aria-label="Cart">
+      <a href="cart.php" class="icon-btn" title="Cart" aria-label="Cart">
         <i class="fas fa-shopping-cart"></i>
-        <span>(<?= $count_cart_items->rowCount(); ?>)</span>
+        <?php if($cart_count > 0): ?>
+          <span class="badge"><?= $cart_count; ?></span>
+        <?php endif; ?>
       </a>
+
+      <!-- User Profile -->
+      <div class="icon-btn" id="profile-btn" title="Account" aria-label="Toggle account panel">
+        <i class="fas fa-user"></i>
+      </div>
     </div>
 
-    <!-- Profile dropdown -->
-    <div class="profile" id="kp-profile" aria-label="Account panel">
+    <!-- Profile Dropdown -->
+    <div class="profile-dropdown" id="profile-dropdown" aria-label="Account panel">
       <?php
         $select_profile = $conn->prepare("SELECT * FROM `users` WHERE id = ?");
         $select_profile->execute([$user_id]);
-        $fetch_profile = $select_profile->fetch(PDO::FETCH_ASSOC);
+        
+        if($select_profile->rowCount() > 0) {
+          $fetch_profile = $select_profile->fetch(PDO::FETCH_ASSOC);
       ?>
-      <img src="uploaded_img/<?= $fetch_profile['image']; ?>" alt="">
-      <p><?= htmlspecialchars($fetch_profile['name']); ?></p>
-
-      <a href="user_profile_update.php" class="btn">update profile</a>
-      <a href="logout.php" class="delete-btn">logout</a>
-
-      <div class="flex-btn">
-        <a href="login.php" class="option-btn">login</a>
-        <a href="register.php" class="option-btn">register</a>
-      </div>
+          <!-- Logged in user -->
+          <div class="profile-info">
+            <img src="uploaded_img/<?= htmlspecialchars($fetch_profile['image']); ?>" 
+                 alt="Profile" class="profile-avatar">
+            <p class="profile-name"><?= htmlspecialchars($fetch_profile['name']); ?></p>
+          </div>
+          
+          <div class="profile-actions">
+            <a href="user_profile_update.php" class="profile-btn primary">Update Profile</a>
+            <a href="logout.php" class="profile-btn danger">Logout</a>
+          </div>
+      <?php
+        } else {
+      ?>
+          <!-- Guest user -->
+          <div class="profile-info">
+            <div class="profile-avatar" style="background: linear-gradient(135deg, var(--kp-primary), var(--kp-secondary)); display: flex; align-items: center; justify-content: center;">
+              <i class="fas fa-user" style="color: white; font-size: 24px;"></i>
+            </div>
+            <p class="profile-name">Guest User</p>
+          </div>
+          
+          <div class="profile-actions">
+            <div class="auth-buttons">
+              <a href="login.php" class="profile-btn secondary">Login</a>
+              <a href="register.php" class="profile-btn primary">Register</a>
+            </div>
+          </div>
+      <?php
+        }
+      ?>
     </div>
   </div>
 </header>
 
-<!-- Minimal JS to toggle menu/profile -->
 <script>
-  (function(){
-    const menuBtn = document.getElementById('menu-btn');
-    const userBtn = document.getElementById('user-btn');
-    const nav     = document.getElementById('kp-navbar');
-    const profile = document.getElementById('kp-profile');
+document.addEventListener('DOMContentLoaded', function() {
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const profileBtn = document.getElementById('profile-btn');
+  const navbar = document.getElementById('navbar');
+  const profileDropdown = document.getElementById('profile-dropdown');
 
-    if(menuBtn){
-      menuBtn.addEventListener('click', ()=>{
-        nav.classList.toggle('active');
-        profile.classList.remove('active');
-      });
-    }
-    if(userBtn){
-      userBtn.addEventListener('click', ()=>{
-        profile.classList.toggle('active');
-        nav.classList.remove('active');
-      });
-    }
-
-    // Close panels on outside click
-    document.addEventListener('click', (e)=>{
-      const withinHeader = e.target.closest('.header');
-      if(!withinHeader){
-        nav.classList.remove('active');
-        profile.classList.remove('active');
-      }
+  // Mobile menu toggle
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      navbar.classList.toggle('active');
+      profileDropdown.classList.remove('active');
     });
-  })();
+  }
+
+  // Profile dropdown toggle
+  if (profileBtn) {
+    profileBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      profileDropdown.classList.toggle('active');
+      navbar.classList.remove('active');
+    });
+  }
+
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.header')) {
+      navbar.classList.remove('active');
+      profileDropdown.classList.remove('active');
+    }
+  });
+
+  // Close dropdowns on escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      navbar.classList.remove('active');
+      profileDropdown.classList.remove('active');
+    }
+  });
+
+  // Auto-remove flash messages after 5 seconds
+  const messages = document.querySelectorAll('.kp-message');
+  messages.forEach(function(message) {
+    setTimeout(function() {
+      if (message.parentElement) {
+        message.style.transform = 'translateX(100%)';
+        message.style.opacity = '0';
+        setTimeout(function() {
+          message.remove();
+        }, 300);
+      }
+    }, 5000);
+  });
+});
 </script>
