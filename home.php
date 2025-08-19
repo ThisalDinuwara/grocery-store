@@ -224,6 +224,38 @@ if (
       .promo-badge{ position:absolute; top:6px; right:6px; z-index:10; padding:.5rem .75rem; border-radius:9999px; font-weight:800; background:linear-gradient(135deg,#FF7F00,#FFA500); color:#111; border:1px solid rgba(255,255,255,.25); box-shadow:0 10px 25px rgba(255,127,0,.25); letter-spacing:.2px; font-size:.85rem; }
       .old-price{ color:#e2e8f0; opacity:.9; text-decoration: line-through; font-weight:600; }
       .deal-row{ display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
+
+      /* === Welcome Modal (first-visit only) === */
+      #welcomeModal{
+        position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+        background:rgba(0,0,0,.55); backdrop-filter:blur(6px); z-index:10000;
+      }
+      .wm-card{
+        width:min(520px,92vw);
+        border-radius:24px; border:1px solid rgba(255,255,255,.22);
+        background: radial-gradient(120% 120% at 10% 0%, rgba(255,127,0,.18), rgba(255,69,0,.12) 40%, rgba(13,5,0,.95) 75%);
+        box-shadow:0 24px 60px rgba(255,127,0,.25), inset 0 0 0 1px rgba(255,255,255,.08);
+        transform:scale(.9) translateY(20px); opacity:0;
+      }
+      .wm-card.show{ animation: wmPop .55s cubic-bezier(.2,.8,.2,1) forwards; }
+      @keyframes wmPop{
+        0%{opacity:0; transform:scale(.9) translateY(20px)}
+        60%{opacity:1; transform:scale(1.02) translateY(0)}
+        100%{opacity:1; transform:scale(1) translateY(0)}
+      }
+      .wm-shine{
+        position:absolute; inset:-2px; border-radius:24px; pointer-events:none;
+        background:conic-gradient(from 0deg, rgba(255,127,0,.0), rgba(255,165,0,.25), rgba(255,127,0,.0));
+        filter:blur(18px); opacity:.35; animation: wmSpin 6s linear infinite;
+      }
+      @keyframes wmSpin{ to{ transform:rotate(360deg) } }
+      .wm-close{
+        position:absolute; top:10px; right:10px;
+        width:38px; height:38px; border-radius:12px;
+        border:1px solid rgba(255,255,255,.15);
+        background:rgba(255,255,255,.08); color:#fff;
+      }
+      .wm-close:hover{ background:linear-gradient(135deg,#FF7F00,#FF4500); color:#111; }
    </style>
 </head>
 <body>
@@ -496,7 +528,7 @@ if (
             }else{
                echo '<div class="col-span-full text-center py-16">
                      <div class="glass-effect p-12 rounded-3xl max-w-md mx-auto">
-                        <i class="fas fa-box-open text-6xl" style="color:#FFA500"></i>
+                        <i class="fas fa-box-open text-6xl" style="color:#FFA500)"></i>
                         <p class="text-2xl text-gray-300 font-medium">No products available yet!</p>
                      </div>
                   </div>';
@@ -654,6 +686,42 @@ if (
   </div>
 </section>
 
+<!-- Welcome Modal (added) -->
+<div id="welcomeModal" aria-hidden="true">
+  <div class="wm-card glass-effect p-8 md:p-10 relative">
+    <div class="wm-shine"></div>
+
+    <button id="wmClose" class="wm-close flex items-center justify-center">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <div class="text-center space-y-4">
+      <div class="text-5xl font-extrabold gradient-text tracking-wide">WELCOME</div>
+      <div class="text-2xl font-gaming">TO <span class="gradient-text">KANDU PINNAWALA</span></div>
+      <p class="text-gray-300 max-w-md mx-auto">
+        Traditional Sri Lankan handicrafts — crafted with love.
+      </p>
+
+      <button id="wmStart"
+        class="mt-4 inline-flex items-center justify-center text-black px-7 py-3 rounded-xl font-semibold hover-glow neon-glow transition"
+        style="background:linear-gradient(90deg,#FF7F00,#FF4500)">
+        <i class="fa-solid fa-rocket mr-2"></i> Start exploring
+      </button>
+
+      <label class="mt-3 flex items-center justify-center gap-2 text-xs text-gray-300 select-none">
+        <input id="wmDontShow" type="checkbox"
+               class="w-4 h-4 rounded border-white/30 bg-white/10">
+        Don’t show again
+      </label>
+    </div>
+
+    <div class="pointer-events-none absolute -top-4 -left-4 w-14 h-14 rounded-xl floating-animation"
+         style="background:linear-gradient(135deg,#FF7F00,#FF4500); opacity:.75"></div>
+    <div class="pointer-events-none absolute -bottom-5 -right-6 w-16 h-16 rounded-xl floating-animation"
+         style="animation-delay:.6s;background:linear-gradient(135deg,#FFA500,#FF7F00); opacity:.75"></div>
+  </div>
+</div>
+
 <?php include 'footer.php'; ?>
 
 <script>
@@ -709,6 +777,42 @@ if (
       ta.addEventListener('input',()=>{ const len=ta.value.length; cc.textContent = `${len}/${max}`; if(len>max){ ta.value=ta.value.slice(0,max); } });
    })();
 </script>
+
+<!-- Welcome Modal logic (added) -->
+<!-- Welcome Modal logic (always show on refresh) -->
+<script>
+  (function(){
+    const modal = document.getElementById('welcomeModal');
+    if(!modal) return;
+    const card  = modal.querySelector('.wm-card');
+    const btnX  = document.getElementById('wmClose');
+    const btnGo = document.getElementById('wmStart');
+
+    function openModal(){
+      modal.style.display = 'flex';
+      requestAnimationFrame(()=> card.classList.add('show'));
+      modal.setAttribute('aria-hidden','false');
+    }
+    function closeModal(){
+      card.classList.remove('show');
+      setTimeout(()=>{
+        modal.style.display='none';
+        modal.setAttribute('aria-hidden','true');
+      }, 240);
+    }
+
+    // Close interactions
+    [btnX, btnGo].forEach(b=> b && b.addEventListener('click', closeModal));
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && modal.style.display==='flex') closeModal(); });
+
+    // Always show popup after page loads
+    window.addEventListener('load', ()=> setTimeout(openModal, 600));
+  })();
+</script>
+
+
+
 
 <script src="js/script.js"></script>
 </body>
