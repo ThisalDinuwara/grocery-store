@@ -82,10 +82,28 @@ if(isset($_POST['add_to_cart'])){
    <meta charset="UTF-8">
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>shop</title>
+   <title>Shop - Kandu Pinnawala</title>
 
    <!-- Tailwind CDN -->
    <script src="https://cdn.tailwindcss.com"></script>
+   <script>
+      tailwind.config = {
+         theme: {
+            extend: {
+               colors: {
+                  primary:  '#FF7F00', // bright orange
+                  secondary:'#FF4500', // orange-red
+                  accent:   '#FFA500', // classic orange
+                  dark:     '#1A0F00', // deep warm black
+                  darker:   '#0D0500'
+               },
+               fontFamily: {
+                  'gaming': ['Orbitron', 'monospace']
+               }
+            }
+         }
+      }
+   </script>
 
    <!-- Icons -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
@@ -93,20 +111,21 @@ if(isset($_POST['add_to_cart'])){
    <!-- Your base CSS (kept) -->
    <link rel="stylesheet" href="css/style.css">
 
-   <!-- Modern theme + readable fonts (no header size changes) -->
+   <!-- Home theme + typography bump to match home.php -->
    <style>
       body{
-         background: linear-gradient(135deg, #1B0F0A 0%, #3E2723 50%, #5D4037 100%);
-         color:#F8F4EF;
+         background: linear-gradient(135deg, #0D0500 0%, #1A0F00 50%, #251200 100%);
+         color:#FFF7EE;
+         overflow-x:hidden;
       }
 
-      /* Bump general text sizes (NOT h1/h2/h3 headers) */
-      .text-base{font-size:1.125rem!important;}
-      .text-lg{font-size:1.25rem!important;}
-      .text-xl{font-size:1.375rem!important;}
-      p, label, input, button, a, li { font-size:1.1rem; }
+      /* Typography bump (mirror of home.php) */
+      .text-base{font-size:1.20rem!important;}
+      .text-lg{font-size:1.35rem!important;}
+      .text-xl{font-size:1.50rem!important;}
+      p, label, input, button, a, li { font-size:1.20rem; }
 
-      /* Category pills */
+      /* Category pills in orange theme */
       .p-category{
          display:flex; flex-wrap:wrap; gap:.75rem;
          justify-content:center;
@@ -116,27 +135,24 @@ if(isset($_POST['add_to_cart'])){
       .p-category a{
          background:rgba(255,255,255,.08);
          border:1px solid rgba(255,255,255,.18);
-         color:#F7E7CB;
+         color:#FFE8CF;
          padding:.6rem 1rem; border-radius:999px;
          transition:.25s ease; text-decoration:none;
       }
       .p-category a:hover{
-         background:linear-gradient(135deg,#8B4513,#D2B48C);
-         color:white;
+         background:linear-gradient(135deg,#FF7F00,#FFA500);
+         color:#111;
          transform:translateY(-2px);
-         box-shadow:0 10px 22px rgba(210,180,140,.25);
+         box-shadow:0 10px 22px rgba(255,165,0,.25);
       }
 
       /* Section background */
-      #products{
-         background:transparent;
-      }
+      #products{ background:transparent; }
 
-      /* ====== Modern product grid card (visual only) ====== */
+      /* Product card styled like home */
       .product-card{
-         background: radial-gradient(400px 120px at 20% 0%, rgba(210,180,140,.16), transparent 55%),
-                     linear-gradient(180deg, rgba(62,39,35,.95), rgba(62,39,35,.85));
-         border:1px solid rgba(210,180,140,.28);
+         background: linear-gradient(180deg, rgba(26,15,0,.92), rgba(26,15,0,.84));
+         border:1px solid rgba(255,200,140,.28);
          border-radius:22px;
          backdrop-filter: blur(16px);
          overflow:hidden;
@@ -145,33 +161,30 @@ if(isset($_POST['add_to_cart'])){
       }
       .product-card:hover{
          transform: translateY(-8px) scale(1.015);
-         border-color: rgba(210,180,140,.55);
-         box-shadow: 0 22px 48px rgba(160,82,45,.35);
+         border-color: rgba(255,200,140,.55);
+         box-shadow: 0 22px 48px rgba(255,127,0,.35);
       }
 
-      /* Image wrapper */
       .product-card .thumb{
          border-radius:18px;
-         border:1px solid rgba(210,180,140,.25);
+         border:1px solid rgba(255,200,140,.25);
          overflow:hidden;
-         background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
+         background: radial-gradient(600px 120px at 20% 0%, rgba(255,165,0,.18), transparent 60%);
       }
       .product-card img{ transition: transform .6s ease; }
       .group:hover .product-card img{ transform: scale(1.07); }
 
-      /* Price badge */
       .price-badge{
-         background: linear-gradient(135deg, #8B4513, #D2B48C);
-         color:white;
+         background: linear-gradient(135deg, #FF7F00, #FF4500);
+         color:#111;
          padding:.6rem 1rem;
          border-radius:999px;
          font-weight:800;
          font-size:1.05rem;
          border:1px solid rgba(255,255,255,.18);
-         box-shadow: 0 10px 24px rgba(210,180,140,.28);
+         box-shadow: 0 10px 24px rgba(255,165,0,.28);
       }
 
-      /* Action chips */
       .chip{
          width:44px;height:44px;
          display:flex;align-items:center;justify-content:center;
@@ -182,46 +195,40 @@ if(isset($_POST['add_to_cart'])){
          transition:.25s;
       }
       .chip:hover{
-         background: linear-gradient(135deg, #8B4513, #D2B48C);
-         color:#fff;
+         background: linear-gradient(135deg, #FF7F00, #FFA500);
+         color:#111;
          transform: translateY(-2px);
       }
 
-      /* Product title + texts */
       .product-title{
          color:#FFF7EE;
          font-weight:800;
          letter-spacing:.2px;
          line-height:1.25;
          text-shadow:0 1px 0 rgba(0,0,0,.35);
-         font-size:1.25rem; /* Bigger without touching headers */
+         font-size:1.25rem;
       }
-      .product-meta{
-         color:#E9DDCF;
-      }
+      .product-meta{ color:#FFE8CF; }
 
-      /* Inputs */
       .qty{
          background: rgba(255,255,255,.08);
          border:1px solid rgba(255,255,255,.22);
          color:#fff;
       }
-      .qty:focus{ outline:none; box-shadow:0 0 0 3px rgba(210,180,140,.35); }
+      .qty:focus{ outline:none; box-shadow:0 0 0 3px rgba(255,127,0,.35); }
 
-      /* CTA */
       .btn-cart{
-         background: linear-gradient(135deg, #8B4513, #D2B48C);
-         color:#fff;
-         font-weight:700;
+         background: linear-gradient(135deg, #FF7F00, #FF4500);
+         color:#111;
+         font-weight:800;
          letter-spacing:.2px;
          padding:.95rem 1rem;
          border-radius:14px;
          transition:.25s;
-         box-shadow:0 12px 28px rgba(210,180,140,.25);
+         box-shadow:0 12px 28px rgba(255,127,0,.25);
       }
       .btn-cart:hover{ transform: translateY(-2px) scale(1.01); }
 
-      /* Section header colors for contrast on dark bg */
       .section-title{ color:#FFF3E4; }
       .section-sub{ color:#E8DAC8; }
    </style>
@@ -265,7 +272,7 @@ if(isset($_POST['add_to_cart'])){
                   <a href="view_page.php?pid=<?= (int)$fetch_products['id']; ?>" class="chip" title="View">
                      <i class="fas fa-eye"></i>
                   </a>
-                  <!-- Add to wishlist (optional visible action; PHP already supports it) -->
+                  <!-- Add to wishlist -->
                   <button type="submit" name="add_to_wishlist" class="chip" title="Add to Wishlist">
                      <i class="fas fa-heart"></i>
                   </button>
@@ -273,7 +280,7 @@ if(isset($_POST['add_to_cart'])){
 
                <!-- Image -->
                <div class="thumb aspect-square mb-6">
-                  <img src="uploaded_img/<?= htmlspecialchars($fetch_products['image']); ?>" 
+                  <img src="uploaded_img<?= strpos($fetch_products['image'],'/')===0?'':'/' ?><?= htmlspecialchars($fetch_products['image']); ?>" 
                        alt="<?= htmlspecialchars($fetch_products['name']); ?>" 
                        class="w-full h-full object-cover">
                </div>
@@ -307,9 +314,9 @@ if(isset($_POST['add_to_cart'])){
             }else{
                echo '<div class="col-span-full text-center py-16">
                         <div class="mx-auto inline-flex items-center justify-center w-20 h-20 rounded-full" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);">
-                           <i class="fas fa-box-open text-3xl" style="color:#E8DAC8"></i>
+                           <i class="fas fa-box-open text-3xl" style="color:#FFE8CF"></i>
                         </div>
-                        <p class="mt-6 text-2xl" style="color:#F0E6DA;">No products available yet!</p>
+                        <p class="mt-6 text-2xl" style="color:#FFE8CF;">No products available yet!</p>
                      </div>';
             }
          ?>
