@@ -1,61 +1,106 @@
 <?php
-
 @include 'config.php';
-
 session_start();
 
-$user_id = $_SESSION['user_id'];
+/* ---------- PHP 8.1+ safe helpers (no deprecated filters) ---------- */
+function san_text($v){ return trim(filter_var($v ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS)); } // generic text
+function san_email_raw($v){ return trim(filter_var($v ?? '', FILTER_SANITIZE_EMAIL)); }        // raw email (then validate)
+function digits_plus($v){ return preg_replace('/[^\d+\s()-]/', '', (string)$v); }              // allow +, space, (), -
+function san_int($v){ return (int) filter_var($v ?? '', FILTER_SANITIZE_NUMBER_INT); }
+function now_str(){ return date('Y-m-d H:i:s'); }
 
-if(!isset($user_id)){
+$user_id = $_SESSION['user_id'] ?? null;
+if(!$user_id){
    header('location:login.php');
-};
-
-if(isset($_POST['order'])){
-
-   $name = $_POST['name'];
-   $name = filter_var($name, FILTER_SANITIZE_STRING);
-   $number = $_POST['number'];
-   $number = filter_var($number, FILTER_SANITIZE_STRING);
-   $email = $_POST['email'];
-   $email = filter_var($email, FILTER_SANITIZE_STRING);
-   $method = $_POST['method'];
-   $method = filter_var($method, FILTER_SANITIZE_STRING);
-   $address = 'flat no. '. $_POST['flat'] .' '. $_POST['street'] .' '. $_POST['city'] .' '. $_POST['state'] .' '. $_POST['country'] .' - '. $_POST['pin_code'];
-   $address = filter_var($address, FILTER_SANITIZE_STRING);
-   $placed_on = date('d-M-Y');
-
-   $cart_total = 0;
-   $cart_products[] = '';
-
-   $cart_query = $conn->prepare("SELECT * FROM `cart` WHERE user_id = ?");
-   $cart_query->execute([$user_id]);
-   if($cart_query->rowCount() > 0){
-      while($cart_item = $cart_query->fetch(PDO::FETCH_ASSOC)){
-         $cart_products[] = $cart_item['name'].' ( '.$cart_item['quantity'].' )';
-         $sub_total = ($cart_item['price'] * $cart_item['quantity']);
-         $cart_total += $sub_total;
-      };
-   };
-
-   $total_products = implode(', ', $cart_products);
-
-   $order_query = $conn->prepare("SELECT * FROM `orders` WHERE name = ? AND number = ? AND email = ? AND method = ? AND address = ? AND total_products = ? AND total_price = ?");
-   $order_query->execute([$name, $number, $email, $method, $address, $total_products, $cart_total]);
-
-   if($cart_total == 0){
-      $message[] = 'your cart is empty';
-   }elseif($order_query->rowCount() > 0){
-      $message[] = 'order placed already!';
-   }else{
-      $insert_order = $conn->prepare("INSERT INTO `orders`(user_id, name, number, email, method, address, total_products, total_price, placed_on) VALUES(?,?,?,?,?,?,?,?,?)");
-      $insert_order->execute([$user_id, $name, $number, $email, $method, $address, $total_products, $cart_total, $placed_on]);
-      $delete_cart = $conn->prepare("DELETE FROM `cart` WHERE user_id = ?");
-      $delete_cart->execute([$user_id]);
-      $message[] = 'order placed successfully!';
-   }
-
+   exit;
 }
 
+if (isset($_POST['order'])) {
+
+   // --- Read + sanitize inputs ---
+   $name   = san_text($_POST['name']   ?? '');
+   $number = digits_plus($_POST['number'] ?? '');
+   $emailR = san_email_raw($_POST['email'] ?? '');
+   $method = san_text($_POST['method'] ?? '');
+
+   // Build a safe, human-readable address string
+   $flat    = san_text($_POST['flat']    ?? '');
+   $street  = san_text($_POST['street']  ?? '');
+   $city    = san_text($_POST['city']    ?? '');
+   $state   = san_text($_POST['state']   ?? '');
+   $country = san_text($_POST['country'] ?? '');
+   $pin     = san_text($_POST['pin_code'] ?? ''); // keep as text to allow leading zeroes
+
+   // Put together; avoid double spaces
+   $address_parts = array_filter([
+      $flat ? "Flat: {$flat}" : null,
+      $street,
+      $city,
+      $state,
+      $country,
+      $pin ? "PIN: {$pin}" : null
+   ]);
+   $address  = implode(', ', $address_parts);
+   $placed_on = now_str();
+
+   // --- Validate required fields ---
+   $errors = [];
+   if ($name === '' || mb_strlen($name) < 2) { $errors[] = 'Enter your full name.'; }
+   if (!filter_var($emailR, FILTER_VALIDATE_EMAIL)) { $errors[] = 'Enter a valid email address.'; }
+   // normalize phone for length check
+   $numberDigits = preg_replace('/\D/', '', $number);
+   if ($numberDigits === '' || strlen($numberDigits) < 7) { $errors[] = 'Enter a valid phone number.'; }
+   if ($method === '') { $errors[] = 'Select a payment method.'; }
+   if ($address === '' || mb_strlen($address) < 6) { $errors[] = 'Provide a complete address.'; }
+
+   // --- Compute cart totals ---
+   $cart_total = 0.0;
+   $cart_products = []; // start empty (no leading comma)
+
+   $cart_query = $conn->prepare("SELECT name, price, quantity FROM cart WHERE user_id = ?");
+   $cart_query->execute([$user_id]);
+   while($cart_item = $cart_query->fetch(PDO::FETCH_ASSOC)){
+      $cart_products[] = $cart_item['name'].' ( '.$cart_item['quantity'].' )';
+      $cart_total += ((float)$cart_item['price'] * (int)$cart_item['quantity']);
+   }
+
+   if ($cart_total <= 0) { $errors[] = 'Your cart is empty.'; }
+
+   if (!empty($errors)) {
+      // Show all errors using your existing toast system
+      $message[] = implode(' ', $errors);
+   } else {
+      $total_products = implode(', ', $cart_products);
+
+      // avoid duplicate identical orders
+      $order_query = $conn->prepare("
+         SELECT 1 FROM orders
+         WHERE name = ? AND number = ? AND email = ? AND method = ? AND address = ?
+           AND total_products = ? AND total_price = ?
+         LIMIT 1
+      ");
+      $order_query->execute([$name, $number, $emailR, $method, $address, $total_products, $cart_total]);
+
+      if($order_query->rowCount() > 0){
+         $message[] = 'order placed already!';
+      }else{
+         $insert_order = $conn->prepare("
+            INSERT INTO orders
+              (user_id, name, number, email, method, address, total_products, total_price, placed_on)
+            VALUES
+              (?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ");
+         $insert_order->execute([
+            $user_id, $name, $number, $emailR, $method, $address, $total_products, $cart_total, $placed_on
+         ]);
+
+         $delete_cart = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
+         $delete_cart->execute([$user_id]);
+
+         $message[] = 'order placed successfully!';
+      }
+   }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -110,11 +155,9 @@ if(isset($_POST['order'])){
       .gradient-text{background:linear-gradient(45deg,#8B4513,#A0522D,#D2B48C);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
       .divider{height:1px;background:linear-gradient(90deg,rgba(139,69,19,.45),rgba(210,180,140,.45))}
       .chip{display:inline-flex;align-items:center;gap:.5rem;border-radius:9999px;padding:.35rem .75rem}
-      /* Inputs on dark glass */
       .input-lite{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff}
       .input-lite::placeholder{color:#d9cbb9}
       .input-lite:focus{outline:none;box-shadow:0 0 0 3px rgba(210,180,140,.35)}
-      /* Cards */
       .card-dark{border-radius:22px}
    </style>
 </head>
@@ -123,9 +166,9 @@ if(isset($_POST['order'])){
 <?php include 'header.php'; ?>
 
 <?php
-// Collect cart items first
+// Collect cart items for summary
 $cart_grand_total = 0;
-$select_cart_items = $conn->prepare("SELECT * FROM `cart` WHERE user_id = ?");
+$select_cart_items = $conn->prepare("SELECT * FROM cart WHERE user_id = ?");
 $select_cart_items->execute([$user_id]);
 $cart_items = $select_cart_items->fetchAll(PDO::FETCH_ASSOC);
 foreach ($cart_items as $ci) {
@@ -226,7 +269,7 @@ $cart_count = count($cart_items);
             </div>
             <div>
               <label class="block text-sm font-medium text-[#EADDCB] mb-2">Your Number</label>
-              <input type="number" name="number" placeholder="Enter your number" class="w-full px-4 py-3 rounded-xl input-lite" required>
+              <input type="text" name="number" placeholder="Enter your number" class="w-full px-4 py-3 rounded-xl input-lite" required>
             </div>
             <div>
               <label class="block text-sm font-medium text-[#EADDCB] mb-2">Your Email</label>
@@ -263,7 +306,7 @@ $cart_count = count($cart_items);
             </div>
             <div>
               <label class="block text-sm font-medium text-[#EADDCB] mb-2">PIN Code</label>
-              <input type="number" min="0" name="pin_code" placeholder="e.g. 123456" class="w-full px-4 py-3 rounded-xl input-lite" required>
+              <input type="text" name="pin_code" placeholder="e.g. 123456" class="w-full px-4 py-3 rounded-xl input-lite" required>
             </div>
           </div>
 

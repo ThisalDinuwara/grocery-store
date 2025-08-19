@@ -1,38 +1,58 @@
 <?php
-
 @include 'config.php';
-
 session_start();
 
-$user_id = $_SESSION['user_id'];
-
-if(!isset($user_id)){
+$user_id = $_SESSION['user_id'] ?? null;
+if (!$user_id) {
    header('location:login.php');
-};
-
-if(isset($_POST['send'])){
-
-   $name = $_POST['name'];
-   $name = filter_var($name, FILTER_SANITIZE_STRING);
-   $email = $_POST['email'];
-   $email = filter_var($email, FILTER_SANITIZE_STRING);
-   $number = $_POST['number'];
-   $number = filter_var($number, FILTER_SANITIZE_STRING);
-   $msg = $_POST['msg'];
-   $msg = filter_var($msg, FILTER_SANITIZE_STRING);
-
-   $select_message = $conn->prepare("SELECT * FROM `message` WHERE name = ? AND email = ? AND number = ? AND message = ?");
-   $select_message->execute([$name, $email, $number, $msg]);
-
-   if($select_message->rowCount() > 0){
-      $message[] = 'already sent message!';
-   }else{
-      $insert_message = $conn->prepare("INSERT INTO `message`(user_id, name, email, number, message) VALUES(?,?,?,?,?)");
-      $insert_message->execute([$user_id, $name, $email, $number, $msg]);
-      $message[] = 'sent message successfully!';
-   }
+   exit;
 }
 
+/* always have an array so foreach in header/footer is safe */
+$message = [];
+
+if (isset($_POST['send'])) {
+   // ---- sanitization (no deprecated filters) ----
+   $name   = trim($_POST['name']   ?? '');
+   $email  = trim($_POST['email']  ?? '');
+   $number = preg_replace('/\D+/', '', $_POST['number'] ?? ''); // keep digits only
+   $msg    = trim($_POST['msg']    ?? '');
+
+   // strip tags but keep plain text
+   $name = strip_tags($name);
+   $msg  = strip_tags($msg);
+
+   // ---- validation ----
+   $errors = [];
+   if ($name === '' || mb_strlen($name) > 120)  { $errors[] = 'Please enter a valid name.'; }
+   if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 190) { $errors[] = 'Please enter a valid email.'; }
+   if ($number === '' || mb_strlen($number) < 6 || mb_strlen($number) > 20) { $errors[] = 'Please enter a valid phone number.'; }
+   if ($msg === '' || mb_strlen($msg) > 2000) { $errors[] = 'Please enter a valid message.'; }
+
+   if (empty($errors)) {
+      // check duplicates (same user + same content recently)
+      $select = $conn->prepare(
+         "SELECT id FROM `message`
+          WHERE user_id = ? AND name = ? AND email = ? AND number = ? AND message = ?
+          ORDER BY id DESC LIMIT 1"
+      );
+      $select->execute([$user_id, $name, $email, $number, $msg]);
+
+      if ($select->rowCount() > 0) {
+         $message[] = 'already sent message!';
+      } else {
+         $insert = $conn->prepare(
+            "INSERT INTO `message`(user_id, name, email, number, message)
+             VALUES(?,?,?,?,?)"
+         );
+         $insert->execute([$user_id, $name, $email, $number, $msg]);
+         $message[] = 'sent message successfully!';
+      }
+   } else {
+      // show all validation problems in one toast
+      $message[] = implode(' ', $errors);
+   }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -79,8 +99,6 @@ if(isset($_POST['send'])){
       .input-lite{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff}
       .input-lite::placeholder{color:#cbbfb3}
       .input-lite:focus{outline:none;box-shadow:0 0 0 3px rgba(210,180,140,.35)}
-
-      /* ---- FIX: force readable text inside the left card ---- */
       .force-white, .force-white *{color:#ffffff !important}
       .force-muted{color:#EADDCB !important}
       .force-icon{color:#FFFFFF !important}

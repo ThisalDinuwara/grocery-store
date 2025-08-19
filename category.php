@@ -1,81 +1,74 @@
 <?php
-
 @include 'config.php';
-
 session_start();
 
-$user_id = $_SESSION['user_id'];
+/* ---------- PHP-8.1+ safe sanitizers ---------- */
+function san_text($v){ return trim(filter_var($v ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS)); }
+function san_email($v){ $v = trim(filter_var($v ?? '', FILTER_SANITIZE_EMAIL)); return $v; }
+function san_float($v){ return (float) filter_var($v ?? 0, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION); }
+function san_int($v){   return (int)   filter_var($v ?? 0, FILTER_SANITIZE_NUMBER_INT); }
+function san_filekey($v){ return preg_replace('/[^A-Za-z0-9_\-\.]/','', (string)($v ?? '')); }          // images
+function san_phone($v){  return preg_replace('/[^\d+\s()-]/','', (string)($v ?? '')); }                 // allow + ( )
+function san_slug($v){   return preg_replace('/[^a-z0-9\-]/','', strtolower(trim((string)$v))); }       // for category key
 
-if(!isset($user_id)){
-   header('location:login.php');
-};
+$user_id = $_SESSION['user_id'] ?? null;
+if (!$user_id) { header('location:login.php'); exit; }
 
-if(isset($_POST['add_to_wishlist'])){
+/* ---------------- Add to wishlist ---------------- */
+if (isset($_POST['add_to_wishlist'])) {
+    $pid    = san_int($_POST['pid'] ?? 0);
+    $p_name = san_text($_POST['p_name'] ?? '');
+    $p_price= san_float($_POST['p_price'] ?? 0);
+    $p_image= san_filekey($_POST['p_image'] ?? '');
 
-   $pid = $_POST['pid'];
-   $pid = filter_var($pid, FILTER_SANITIZE_STRING);
-   $p_name = $_POST['p_name'];
-   $p_name = filter_var($p_name, FILTER_SANITIZE_STRING);
-   $p_price = $_POST['p_price'];
-   $p_price = filter_var($p_price, FILTER_SANITIZE_STRING);
-   $p_image = $_POST['p_image'];
-   $p_image = filter_var($p_image, FILTER_SANITIZE_STRING);
+    $check_wishlist_numbers = $conn->prepare("SELECT 1 FROM wishlist WHERE name = ? AND user_id = ?");
+    $check_wishlist_numbers->execute([$p_name, $user_id]);
 
-   $check_wishlist_numbers = $conn->prepare("SELECT * FROM wishlist WHERE name = ? AND user_id = ?");
-   $check_wishlist_numbers->execute([$p_name, $user_id]);
+    $check_cart_numbers = $conn->prepare("SELECT 1 FROM cart WHERE name = ? AND user_id = ?");
+    $check_cart_numbers->execute([$p_name, $user_id]);
 
-   $check_cart_numbers = $conn->prepare("SELECT * FROM cart WHERE name = ? AND user_id = ?");
-   $check_cart_numbers->execute([$p_name, $user_id]);
-
-   if($check_wishlist_numbers->rowCount() > 0){
-      $message[] = 'already added to wishlist!';
-   }elseif($check_cart_numbers->rowCount() > 0){
-      $message[] = 'already added to cart!';
-   }else{
-      $insert_wishlist = $conn->prepare("INSERT INTO wishlist(user_id, pid, name, price, image) VALUES(?,?,?,?,?)");
-      $insert_wishlist->execute([$user_id, $pid, $p_name, $p_price, $p_image]);
-      $message[] = 'added to wishlist!';
-   }
-
+    if ($check_wishlist_numbers->rowCount() > 0) {
+        $message[] = 'already added to wishlist!';
+    } elseif ($check_cart_numbers->rowCount() > 0) {
+        $message[] = 'already added to cart!';
+    } else {
+        $insert_wishlist = $conn->prepare(
+            "INSERT INTO wishlist (user_id, pid, name, price, image) VALUES (?,?,?,?,?)"
+        );
+        $insert_wishlist->execute([$user_id, $pid, $p_name, $p_price, $p_image]);
+        $message[] = 'added to wishlist!';
+    }
 }
 
-if(isset($_POST['add_to_cart'])){
+/* ---------------- Add to cart ---------------- */
+if (isset($_POST['add_to_cart'])) {
+    $pid    = san_int($_POST['pid'] ?? 0);
+    $p_name = san_text($_POST['p_name'] ?? '');
+    $p_price= san_float($_POST['p_price'] ?? 0);
+    $p_image= san_filekey($_POST['p_image'] ?? '');
+    $p_qty  = max(1, san_int($_POST['p_qty'] ?? 1));
 
-   $pid = $_POST['pid'];
-   $pid = filter_var($pid, FILTER_SANITIZE_STRING);
-   $p_name = $_POST['p_name'];
-   $p_name = filter_var($p_name, FILTER_SANITIZE_STRING);
-   $p_price = $_POST['p_price'];
-   $p_price = filter_var($p_price, FILTER_SANITIZE_STRING);
-   $p_image = $_POST['p_image'];
-   $p_image = filter_var($p_image, FILTER_SANITIZE_STRING);
-   $p_qty = $_POST['p_qty'];
-   $p_qty = filter_var($p_qty, FILTER_SANITIZE_STRING);
+    $check_cart_numbers = $conn->prepare("SELECT 1 FROM cart WHERE name = ? AND user_id = ?");
+    $check_cart_numbers->execute([$p_name, $user_id]);
 
-   $check_cart_numbers = $conn->prepare("SELECT * FROM cart WHERE name = ? AND user_id = ?");
-   $check_cart_numbers->execute([$p_name, $user_id]);
+    if ($check_cart_numbers->rowCount() > 0) {
+        $message[] = 'already added to cart!';
+    } else {
+        $check_wishlist_numbers = $conn->prepare("SELECT 1 FROM wishlist WHERE name = ? AND user_id = ?");
+        $check_wishlist_numbers->execute([$p_name, $user_id]);
+        if ($check_wishlist_numbers->rowCount() > 0) {
+            $delete_wishlist = $conn->prepare("DELETE FROM wishlist WHERE name = ? AND user_id = ?");
+            $delete_wishlist->execute([$p_name, $user_id]);
+        }
 
-   if($check_cart_numbers->rowCount() > 0){
-      $message[] = 'already added to cart!';
-   }else{
-
-      $check_wishlist_numbers = $conn->prepare("SELECT * FROM wishlist WHERE name = ? AND user_id = ?");
-      $check_wishlist_numbers->execute([$p_name, $user_id]);
-
-      if($check_wishlist_numbers->rowCount() > 0){
-         $delete_wishlist = $conn->prepare("DELETE FROM wishlist WHERE name = ? AND user_id = ?");
-         $delete_wishlist->execute([$p_name, $user_id]);
-      }
-
-      $insert_cart = $conn->prepare("INSERT INTO cart(user_id, pid, name, price, quantity, image) VALUES(?,?,?,?,?,?)");
-      $insert_cart->execute([$user_id, $pid, $p_name, $p_price, $p_qty, $p_image]);
-      $message[] = 'added to cart!';
-   }
-
+        $insert_cart = $conn->prepare(
+            "INSERT INTO cart (user_id, pid, name, price, quantity, image) VALUES (?,?,?,?,?,?)"
+        );
+        $insert_cart->execute([$user_id, $pid, $p_name, $p_price, $p_qty, $p_image]);
+        $message[] = 'added to cart!';
+    }
 }
-
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -105,8 +98,6 @@ if(isset($_POST['add_to_cart'])){
 
    <!-- font awesome -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-
-   <!-- site css -->
    <link rel="stylesheet" href="css/style.css">
 
    <style>
@@ -128,7 +119,6 @@ if(isset($_POST['add_to_cart'])){
       .gradient-text{ background: linear-gradient(45deg,#8B4513,#A0522D,#D2B48C); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text }
       .floating-animation{ animation:floating 3s ease-in-out infinite }
       @keyframes floating{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-
       .product-card{
         background: linear-gradient(180deg, rgba(62,39,35,.92), rgba(62,39,35,.82));
         border:1px solid rgba(210,180,140,.28);
@@ -155,12 +145,12 @@ if(isset($_POST['add_to_cart'])){
    </style>
 </head>
 <body>
-   
+
 <?php include 'header.php'; ?>
 
 <?php
-$category_name = isset($_GET['category']) ? trim($_GET['category']) : '';
-$category_name = filter_var($category_name, FILTER_SANITIZE_STRING);
+// Category from query string (no deprecated filter)
+$category_name = isset($_GET['category']) ? san_slug($_GET['category']) : '';
 ?>
 
 <section class="relative py-16 md:py-20 hero-bg overflow-hidden">
@@ -175,7 +165,7 @@ $category_name = filter_var($category_name, FILTER_SANITIZE_STRING);
             <span class="gradient-text font-gaming">CATEGORY</span>
           </h1>
           <p class="text-gray-200">
-            <?= $category_name ? htmlspecialchars(ucwords($category_name)) : 'All Products'; ?>
+            <?= $category_name ? htmlspecialchars(ucwords(str_replace('-',' ', $category_name))) : 'All Products'; ?>
           </p>
         </div>
         <a href="shop.php" class="inline-flex items-center px-6 py-3 rounded-xl glass-effect hover-glow">
@@ -190,28 +180,23 @@ $category_name = filter_var($category_name, FILTER_SANITIZE_STRING);
   <div class="container mx-auto px-6 lg:px-12">
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
       <?php
-        $select_products = $conn->prepare("SELECT * FROM products WHERE category = ? ORDER BY id DESC");
-        $select_products->execute([$category_name]);
-
-        if($select_products->rowCount() > 0){
-          while($fetch_products = $select_products->fetch(PDO::FETCH_ASSOC)){
+        $stmt = $conn->prepare("SELECT * FROM products WHERE category = ? ORDER BY id DESC");
+        $stmt->execute([$category_name]);
+        if ($stmt->rowCount() > 0):
+          while($fetch_products = $stmt->fetch(PDO::FETCH_ASSOC)):
       ?>
       <form action="" method="POST" class="group">
         <div class="product-card p-6 relative h-full flex flex-col">
-          <!-- Price badge -->
           <div class="absolute top-6 left-6 price-badge z-10">
             Rs <?= htmlspecialchars($fetch_products['price']); ?>/-
           </div>
 
-          <!-- Quick actions (NOW includes wishlist) -->
           <div class="absolute top-6 right-6 flex gap-2 z-10">
-            <!-- wishlist submit -->
             <button type="submit" name="add_to_wishlist" title="Add to wishlist"
                     class="w-11 h-11 glass-effect rounded-full flex items-center justify-center hover:text-white hover:bg-gradient-to-r hover:from-[#8B4513] hover:to-[#D2B48C] transition"
                     aria-label="Add to wishlist">
               <i class="fas fa-heart"></i>
             </button>
-            <!-- view -->
             <a href="view_page.php?pid=<?= (int)$fetch_products['id']; ?>"
                class="w-11 h-11 glass-effect rounded-full flex items-center justify-center hover:text-white hover:bg-gradient-to-r hover:from-[#8B4513] hover:to-[#D2B48C] transition"
                aria-label="View">
@@ -219,31 +204,25 @@ $category_name = filter_var($category_name, FILTER_SANITIZE_STRING);
             </a>
           </div>
 
-          <!-- Image -->
           <div class="aspect-square mb-6">
             <img src="uploaded_img/<?= htmlspecialchars($fetch_products['image']); ?>"
                  alt="<?= htmlspecialchars($fetch_products['name']); ?>"
                  class="w-full h-full object-cover">
           </div>
 
-          <!-- Info -->
           <div class="space-y-4 mt-auto">
             <h3 class="product-title text-xl"><?= htmlspecialchars($fetch_products['name']); ?></h3>
 
-            <!-- Hidden inputs -->
             <input type="hidden" name="pid" value="<?= (int)$fetch_products['id']; ?>">
             <input type="hidden" name="p_name" value="<?= htmlspecialchars($fetch_products['name']); ?>">
             <input type="hidden" name="p_price" value="<?= htmlspecialchars($fetch_products['price']); ?>">
             <input type="hidden" name="p_image" value="<?= htmlspecialchars($fetch_products['image']); ?>">
 
-            <!-- Qty -->
             <div class="flex items-center gap-3">
               <label class="text-sm font-medium text-gray-200">QTY:</label>
-              <input type="number" min="1" value="1" name="p_qty"
-                     class="qty w-24 px-3 py-2 rounded-lg text-center">
+              <input type="number" min="1" value="1" name="p_qty" class="qty w-24 px-3 py-2 rounded-lg text-center">
             </div>
 
-            <!-- Add to cart -->
             <button type="submit" name="add_to_cart"
                     class="w-full btn-grad py-3.5 rounded-xl font-semibold hover-glow neon-glow transition">
               <i class="fas fa-shopping-cart mr-2"></i> Add to Cart
@@ -252,22 +231,21 @@ $category_name = filter_var($category_name, FILTER_SANITIZE_STRING);
         </div>
       </form>
       <?php
-          }
-        } else {
+          endwhile;
+        else:
           echo '<div class="col-span-full">
                   <div class="glass-effect p-12 rounded-3xl text-center">
                     <i class="fas fa-box-open text-5xl" style="color:#CD853F"></i>
                     <p class="mt-4 text-xl text-gray-200">No products available!</p>
                   </div>
                 </div>';
-        }
+        endif;
       ?>
     </div>
   </div>
 </section>
 
 <?php include 'footer.php'; ?>
-
 <script src="js/script.js"></script>
 </body>
 </html>

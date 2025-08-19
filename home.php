@@ -3,17 +3,26 @@
 @include 'config.php';
 session_start();
 
+/* ========= PHP 8.1+ safe sanitizers ========= */
+function san_text($v){ return trim(filter_var($v ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS)); } // names/titles/etc.
+function san_int($v){  return (int) filter_var($v ?? '', FILTER_SANITIZE_NUMBER_INT); }        // ids/qty
+function san_float($v){ return (float) filter_var($v ?? '', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION); } // prices
+function san_email($v){ return trim(filter_var($v ?? '', FILTER_SANITIZE_EMAIL)); }             // emails
+
 $user_id = $_SESSION['user_id'];
 if(!isset($user_id)){
    header('location:login.php');
    exit;
 }
 
+/* ---------------------------
+   Wishlist
+----------------------------*/
 if(isset($_POST['add_to_wishlist'])){
-   $pid = filter_var($_POST['pid'], FILTER_SANITIZE_STRING);
-   $p_name = filter_var($_POST['p_name'], FILTER_SANITIZE_STRING);
-   $p_price = filter_var($_POST['p_price'], FILTER_SANITIZE_STRING);
-   $p_image = filter_var($_POST['p_image'], FILTER_SANITIZE_STRING);
+   $pid     = san_int($_POST['pid'] ?? '');
+   $p_name  = san_text($_POST['p_name'] ?? '');
+   $p_price = san_float($_POST['p_price'] ?? '');
+   $p_image = san_text($_POST['p_image'] ?? '');
 
    $check_wishlist_numbers = $conn->prepare("SELECT * FROM wishlist WHERE name = ? AND user_id = ?");
    $check_wishlist_numbers->execute([$p_name, $user_id]);
@@ -32,12 +41,15 @@ if(isset($_POST['add_to_wishlist'])){
    }
 }
 
+/* ---------------------------
+   Cart
+----------------------------*/
 if(isset($_POST['add_to_cart'])){
-   $pid = filter_var($_POST['pid'], FILTER_SANITIZE_STRING);
-   $p_name = filter_var($_POST['p_name'], FILTER_SANITIZE_STRING);
-   $p_price = filter_var($_POST['p_price'], FILTER_SANITIZE_STRING);
-   $p_image = filter_var($_POST['p_image'], FILTER_SANITIZE_STRING);
-   $p_qty = filter_var($_POST['p_qty'], FILTER_SANITIZE_STRING);
+   $pid     = san_int($_POST['pid'] ?? '');
+   $p_name  = san_text($_POST['p_name'] ?? '');
+   $p_price = san_float($_POST['p_price'] ?? '');
+   $p_image = san_text($_POST['p_image'] ?? '');
+   $p_qty   = max(1, san_int($_POST['p_qty'] ?? 1));
 
    $check_cart_numbers = $conn->prepare("SELECT * FROM cart WHERE name = ? AND user_id = ?");
    $check_cart_numbers->execute([$p_name, $user_id]);
@@ -66,12 +78,12 @@ if (
    $_SERVER['REQUEST_METHOD'] === 'POST' &&
    isset($_POST['review_title'], $_POST['review_email'], $_POST['review_message'])
 ) {
-   $rev_name   = trim(filter_var($_POST['review_name']  ?? '', FILTER_SANITIZE_STRING));
-   $rev_email  = trim(filter_var($_POST['review_email'] ?? '', FILTER_SANITIZE_EMAIL));
-   $rev_order  = trim(filter_var($_POST['review_order'] ?? '', FILTER_SANITIZE_STRING));
-   $rev_title  = trim(filter_var($_POST['review_title'] ?? '', FILTER_SANITIZE_STRING));
-   $rev_msg    = trim(filter_var($_POST['review_message'] ?? '', FILTER_SANITIZE_STRING));
-   $rev_rating = (int)($_POST['review_rating'] ?? 0);
+   $rev_name   = san_text($_POST['review_name']  ?? '');
+   $rev_email  = san_email($_POST['review_email'] ?? '');
+   $rev_order  = san_text($_POST['review_order'] ?? '');
+   $rev_title  = san_text($_POST['review_title'] ?? '');
+   $rev_msg    = san_text($_POST['review_message'] ?? '');
+   $rev_rating = san_int($_POST['review_rating'] ?? 0);
 
    $errors = [];
    if ($rev_name === '')   { $errors[] = 'Name is required.'; }
@@ -98,7 +110,7 @@ if (
                $ext = $allowed[$mime];
                $safeBase = bin2hex(random_bytes(8));
                $newName = $safeBase . '_' . time() . '.' . $ext;
-               $destDir = __DIR__ . '/uploaded_reviews'; // fixed
+               $destDir = __DIR__ . '/uploaded_reviews';
                if (!is_dir($destDir)) { @mkdir($destDir, 0755, true); }
                $dest = $destDir . '/' . $newName;
                if (move_uploaded_file($tmp, $dest)) {
@@ -152,10 +164,10 @@ if (
          theme: {
             extend: {
                colors: {
-                  primary:  '#FF7F00', // bright orange
-                  secondary:'#FF4500', // orange-red
-                  accent:   '#FFA500', // classic orange
-                  dark:     '#1A0F00', // deep warm black
+                  primary:  '#FF7F00',
+                  secondary:'#FF4500',
+                  accent:   '#FFA500',
+                  dark:     '#1A0F00',
                   darker:   '#0D0500'
                },
                fontFamily: {
@@ -181,7 +193,6 @@ if (
          overflow-x: hidden;
       }
 
-      /* Orange theme utilities */
       .neon-glow { box-shadow: 0 0 20px rgba(255,127,0,.5), 0 0 40px rgba(255,69,0,.3), 0 0 60px rgba(255,165,0,.2); }
       .glass-effect { background: rgba(255,255,255,.08); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.18); }
       .hover-glow:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(255,127,0,.35); transition: all .3s ease; }
@@ -189,28 +200,16 @@ if (
       @keyframes floating { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
       .gradient-text { background: linear-gradient(45deg, #FF7F00, #FF4500, #FFA500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
       .cyber-border { position:relative; border:2px solid transparent; background: linear-gradient(135deg, rgba(255,127,0,.22), rgba(255,165,0,.22)) border-box; -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0); -webkit-mask-composite: exclude; }
-
-      /* Messages */
       .message { position:fixed; top:20px; right:20px; background:linear-gradient(135deg,#FF7F00,#FF4500); color:#111; padding:15px 20px; border-radius:10px; border:1px solid rgba(255,255,255,.2); z-index:1000; }
-
-      /* Chat button */
       .ai-chat-widget { position:fixed; bottom:30px; right:30px; width:60px; height:60px; background:linear-gradient(135deg,#FF7F00,#FFA500); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 10px 25px rgba(255,127,0,.4); animation:pulse 2s infinite; z-index:1000; }
       @keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
-
-      /* Hero orbs */
       .hero-bg { background: radial-gradient(circle at 20% 80%, rgba(255,127,0,.28) 0%, transparent 55%), radial-gradient(circle at 80% 20%, rgba(255,165,0,.28) 0%, transparent 55%), radial-gradient(circle at 40% 40%, rgba(255,69,0,.28) 0%, transparent 55%); }
-
-      /* Category cards */
       .category-icon { width:80px; height:80px; background:linear-gradient(135deg, rgba(255,127,0,.25), rgba(255,165,0,.25)); border-radius:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; transition:all .3s ease; }
       .category-icon:hover { transform: rotateY(180deg); background: linear-gradient(135deg, #FF7F00, #FFA500); }
-
-      /* Typography bump */
       .text-base{font-size:1.125rem!important;}
       .text-lg{font-size:1.25rem!important;}
       .text-xl{font-size:1.375rem!important;}
       p, label, input, button, a, li { font-size:1.12rem; }
-
-      /* Product grid */
       .product-card{ background: linear-gradient(180deg, rgba(26,15,0,.92), rgba(26,15,0,.84)); border:1px solid rgba(255,200,140,.28); border-radius:22px; backdrop-filter: blur(16px); transition: transform .4s ease, box-shadow .4s ease, border-color .4s ease; }
       .product-card:hover{ transform: translateY(-10px) scale(1.02); border-color: rgba(255,200,140,.6); box-shadow: 0 22px 48px rgba(255,127,0,.35); }
       .product-card .aspect-square{ position:relative; border-radius:18px; border:1px solid rgba(255,200,140,.25); overflow:hidden; background: radial-gradient(600px 120px at 20% 0%, rgba(255,165,0,.18), transparent 60%); }
@@ -222,8 +221,6 @@ if (
       .product-card .qty{ background: rgba(255,255,255,.08); }
       .product-card .qty:focus{ outline:none; box-shadow:0 0 0 3px rgba(255,127,0,.35); }
       .product-card .glass-effect{ border-color: rgba(255,255,255,.25); color:#FFDDB3; }
-
-      /* Promotions */
       .promo-badge{ position:absolute; top:6px; right:6px; z-index:10; padding:.5rem .75rem; border-radius:9999px; font-weight:800; background:linear-gradient(135deg,#FF7F00,#FFA500); color:#111; border:1px solid rgba(255,255,255,.25); box-shadow:0 10px 25px rgba(255,127,0,.25); letter-spacing:.2px; font-size:.85rem; }
       .old-price{ color:#e2e8f0; opacity:.9; text-decoration: line-through; font-weight:600; }
       .deal-row{ display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
@@ -472,16 +469,16 @@ if (
                </div>
 
                <div class="aspect-square rounded-2xl overflow-hidden mb-6">
-                  <img src="uploaded_img/<?= $fetch_products['image']; ?>" alt="<?= $fetch_products['name']; ?>" class="w-full h-full object-cover">
+                  <img src="uploaded_img/<?= $fetch_products['image']; ?>" alt="<?= htmlspecialchars($fetch_products['name']); ?>" class="w-full h-full object-cover">
                </div>
 
                <div class="space-y-4 mt-auto">
-                  <h3 class="text-xl product-title"><?= $fetch_products['name']; ?></h3>
+                  <h3 class="text-xl product-title"><?= htmlspecialchars($fetch_products['name']); ?></h3>
 
                   <input type="hidden" name="pid" value="<?= $fetch_products['id']; ?>">
-                  <input type="hidden" name="p_name" value="<?= $fetch_products['name']; ?>">
+                  <input type="hidden" name="p_name" value="<?= htmlspecialchars($fetch_products['name']); ?>">
                   <input type="hidden" name="p_price" value="<?= $fetch_products['price']; ?>">
-                  <input type="hidden" name="p_image" value="<?= $fetch_products['image']; ?>">
+                  <input type="hidden" name="p_image" value="<?= htmlspecialchars($fetch_products['image']); ?>">
 
                   <div class="flex items-center gap-3">
                      <label class="text-sm font-medium">QTY:</label>
