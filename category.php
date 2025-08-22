@@ -76,8 +76,6 @@ if(isset($_POST['add_to_cart'])){
 
 /* =========================================================
    CATEGORY RESOLUTION (after normalization)
-   - Accepts ?category=ID or legacy names like "wood", "wallarts"
-   - Uses products.category_id referencing categories.id
 ========================================================= */
 $category_param = isset($_GET['category']) ? trim($_GET['category']) : '';
 $category_param = filter_var($category_param, FILTER_SANITIZE_STRING);
@@ -88,7 +86,6 @@ $category_label = '';
 try {
    if ($category_param !== '') {
       if (ctype_digit($category_param)) {
-         // numeric id
          $cid = (int)$category_param;
          $stmt = $conn->prepare("SELECT name FROM `categories` WHERE id = ? LIMIT 1");
          $stmt->execute([$cid]);
@@ -98,7 +95,6 @@ try {
             $category_label = $name;
          }
       } else {
-         // try to match by normalized name (remove spaces, case-insensitive)
          $needle = strtolower(preg_replace('/\s+/', '', $category_param));
          $stmt = $conn->prepare("SELECT id, name FROM `categories` WHERE LOWER(REPLACE(name,' ','')) = ? LIMIT 1");
          $stmt->execute([$needle]);
@@ -109,7 +105,7 @@ try {
       }
    }
 } catch (Exception $e) {
-   // fail silently; will fall back to "All Products"
+   // fall back silently
 }
 
 /* =========================================================
@@ -131,7 +127,7 @@ try {
    <meta charset="UTF-8">
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>category</title>
+   <title>Category - Kandu Pinnawala</title>
 
    <!-- Tailwind CDN -->
    <script src="https://cdn.tailwindcss.com"></script>
@@ -140,11 +136,11 @@ try {
         theme: {
           extend: {
             colors: {
-              primary: '#8B4513',
-              secondary: '#A0522D',
-              accent: '#D2B48C',
-              dark: '#3E2723',
-              darker: '#1B0F0A'
+              primary:   '#B77B3D',  // warm brown
+              secondary: '#D4A373',  // golden beige
+              accent:    '#8C6239',  // deep brown
+              ink:       '#2E1B0E',  // main text
+              soft:      '#6B4E2E',  // subtle text
             },
             fontFamily: { gaming: ['Orbitron','monospace'] }
           }
@@ -160,47 +156,61 @@ try {
 
    <style>
       *{box-sizing:border-box}
+
+      /* ===== Light Theme Base ===== */
       body{
          font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
-         background: linear-gradient(135deg,#1B0F0A 0%,#3E2723 50%,#5D4037 100%);
-         color:#fff; overflow-x:hidden;
+         background: linear-gradient(135deg,#FFFDF9 0%,#F7F3ED 50%,#EFE8DE 100%);
+         color:#2E1B0E; /* ink */
+         overflow-x:hidden;
       }
+
       .hero-bg{
         background:
-          radial-gradient(circle at 20% 80%, rgba(139,69,19,.35) 0%, transparent 55%),
-          radial-gradient(circle at 80% 20%, rgba(210,180,140,.35) 0%, transparent 55%),
-          radial-gradient(circle at 40% 40%, rgba(160,82,45,.35) 0%, transparent 55%);
+          radial-gradient(circle at 20% 80%, rgba(183,123,61,.18) 0%, transparent 55%),
+          radial-gradient(circle at 80% 20%, rgba(212,163,115,.18) 0%, transparent 55%),
+          radial-gradient(circle at 40% 40%, rgba(140,98,57,.18) 0%, transparent 55%);
       }
-      .glass-effect{ background:rgba(255,255,255,.08); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.18) }
-      .neon-glow{ box-shadow:0 0 20px rgba(139,69,19,.5),0 0 40px rgba(160,82,45,.3),0 0 60px rgba(210,180,140,.2) }
-      .hover-glow:hover{ transform:translateY(-5px); box-shadow:0 10px 25px rgba(139,69,19,.35); transition:all .3s ease }
-      .gradient-text{ background: linear-gradient(45deg,#8B4513,#A0522D,#D2B48C); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text }
+
+      /* Light glass + accents */
+      .glass-effect{ background:rgba(255,255,255,.92); backdrop-filter:blur(10px); border:1px solid rgba(183,123,61,.22) }
+      .neon-glow{ box-shadow:0 0 20px rgba(183,123,61,.18),0 0 40px rgba(212,163,115,.18),0 0 60px rgba(140,98,57,.12) }
+      .hover-glow:hover{ transform:translateY(-4px); box-shadow:0 12px 28px rgba(183,123,61,.18); transition:all .3s ease }
+      .gradient-text{ background: linear-gradient(45deg,#B77B3D,#D4A373); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text }
       .floating-animation{ animation:floating 3s ease-in-out infinite }
       @keyframes floating{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 
+      /* Product card on light */
       .product-card{
-        background: linear-gradient(180deg, rgba(62,39,35,.92), rgba(62,39,35,.82));
-        border:1px solid rgba(210,180,140,.28);
-        border-radius:22px; backdrop-filter: blur(16px);
-        transition: transform .4s ease, box-shadow .4s ease, border-color .4s ease;
+        background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(252,247,238,.94));
+        border:1px solid rgba(183,123,61,.26);
+        border-radius:22px; backdrop-filter: blur(10px);
+        transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
         position:relative; overflow:hidden;
       }
-      .product-card:hover{ transform: translateY(-8px) scale(1.02); border-color: rgba(210,180,140,.6); box-shadow:0 22px 48px rgba(160,82,45,.35) }
+      .product-card:hover{ transform: translateY(-6px); border-color: rgba(183,123,61,.5); box-shadow:0 22px 48px rgba(183,123,61,.2) }
       .product-card .aspect-square{
-        border-radius:18px; overflow:hidden; border:1px solid rgba(210,180,140,.25);
-        background: radial-gradient(600px 120px at 20% 0%, rgba(210,180,140,.18), transparent 60%);
+        border-radius:18px; overflow:hidden; border:1px solid rgba(183,123,61,.24);
+        background: radial-gradient(600px 120px at 20% 0%, rgba(212,163,115,.18), transparent 60%);
       }
       .product-card img{ transition: transform .6s ease }
-      .group:hover .product-card img{ transform: scale(1.07) }
+      .group:hover .product-card img{ transform: scale(1.06) }
+
       .price-badge{
-        font-size:1.05rem; padding:.55rem 1rem; border:1px solid rgba(255,255,255,.18);
-        background: linear-gradient(135deg,#8B4513,#D2B48C); color:#fff; border-radius:9999px;
-        box-shadow:0 6px 18px rgba(210,180,140,.25)
+        font-size:1.05rem; padding:.55rem 1rem; border:1px solid rgba(183,123,61,.25);
+        background: linear-gradient(135deg,#B77B3D,#D4A373); color:#fff; border-radius:9999px;
+        box-shadow:0 6px 18px rgba(183,123,61,.22)
       }
-      .product-title{ color:#FFF7EE; font-weight:800; letter-spacing:.2px; line-height:1.25; text-shadow:0 1px 0 rgba(0,0,0,.35) }
-      .qty{ background: rgba(255,255,255,.08); color:#fff }
-      .qty:focus{ outline:none; box-shadow:0 0 0 3px rgba(210,180,140,.35) }
-      .btn-grad{ background: linear-gradient(135deg,#8B4513,#D2B48C); color:#fff; }
+      .product-title{ color:#2E1B0E; font-weight:800; letter-spacing:.2px; line-height:1.25 }
+      .qty{
+        background: #fff; color:#2E1B0E; border:1px solid rgba(183,123,61,.26)
+      }
+      .qty:focus{ outline:none; box-shadow:0 0 0 3px rgba(183,123,61,.22) }
+
+      .btn-grad{ background: linear-gradient(135deg,#B77B3D,#D4A373); color:#fff; }
+      .muted{ color:#6B4E2E }
+      .muted-2{ color:#8A6A49 }
+      .icon-accent{ color:#8C6239 }
    </style>
 </head>
 <body>
@@ -208,8 +218,8 @@ try {
 <?php include 'header.php'; ?>
 
 <section class="relative py-16 md:py-20 hero-bg overflow-hidden">
-  <div class="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-[rgba(139,69,19,0.2)] to-[rgba(210,180,140,0.2)] rounded-full blur-3xl floating-animation"></div>
-  <div class="absolute bottom-10 right-10 w-64 h-64 bg-gradient-to-r from-[rgba(160,82,45,0.2)] to-[rgba(139,69,19,0.2)] rounded-full blur-3xl floating-animation" style="animation-delay:1s"></div>
+  <div class="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-[rgba(183,123,61,0.18)] to-[rgba(212,163,115,0.18)] rounded-full blur-3xl floating-animation"></div>
+  <div class="absolute bottom-10 right-10 w-64 h-64 bg-gradient-to-r from-[rgba(212,163,115,0.18)] to-[rgba(140,98,57,0.18)] rounded-full blur-3xl floating-animation" style="animation-delay:1s"></div>
 
   <div class="container mx-auto px-6 lg:px-12 relative z-10">
     <div class="glass-effect rounded-3xl p-8 md:p-10 neon-glow">
@@ -218,7 +228,7 @@ try {
           <h1 class="text-4xl md:text-5xl font-bold mb-2">
             <span class="gradient-text font-gaming">CATEGORY</span>
           </h1>
-          <p class="text-gray-200">
+          <p class="muted">
             <?= $category_label ? htmlspecialchars($category_label) : 'All Products'; ?>
           </p>
         </div>
@@ -227,14 +237,14 @@ try {
         <form action="" method="get" class="w-full md:w-auto">
           <div class="flex flex-col sm:flex-row gap-3">
             <div class="relative">
-              <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-300"></i>
+              <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 icon-accent"></i>
               <input
                 type="text"
                 name="category"
                 list="categoryList"
                 value="<?= htmlspecialchars($category_param); ?>"
-                placeholder="Search category (e.g., Wood, Brass)..."
-                class="w-full sm:w-80 pl-10 pr-3 py-2 rounded-xl glass-effect border border-white/20 focus:outline-none focus:ring-2 focus:ring-[rgba(139,69,19,0.7)]"
+                placeholder="Search category (e.g., Wood, Brass)…"
+                class="w-full sm:w-80 pl-10 pr-3 py-2 rounded-xl glass-effect focus:outline-none focus:ring-2 focus:ring-[rgba(183,123,61,0.45)]"
               />
               <datalist id="categoryList">
                 <?php foreach($category_names as $cn): ?>
@@ -247,7 +257,7 @@ try {
                 <i class="fas fa-search"></i> Search
               </button>
               <a href="category.php" class="inline-flex items-center gap-2 px-5 py-2 rounded-xl glass-effect hover-glow">
-                <i class="fas fa-rotate-left"></i> Reset
+                <i class="fas fa-rotate-left icon-accent"></i> Reset
               </a>
             </div>
           </div>
@@ -284,14 +294,14 @@ try {
           <!-- Quick actions -->
           <div class="absolute top-6 right-6 flex gap-2 z-10">
             <button type="submit" name="add_to_wishlist" title="Add to wishlist"
-                    class="w-11 h-11 glass-effect rounded-full flex items-center justify-center hover:text-white hover:bg-gradient-to-r hover:from-[#8B4513] hover:to-[#D2B48C] transition"
+                    class="w-11 h-11 glass-effect rounded-full flex items-center justify-center hover:text-white hover:bg-gradient-to-r hover:from-[#B77B3D] hover:to-[#D4A373] transition"
                     aria-label="Add to wishlist">
-              <i class="fas fa-heart"></i>
+              <i class="fas fa-heart icon-accent"></i>
             </button>
             <a href="view_page.php?pid=<?= (int)$fetch_products['id']; ?>"
-               class="w-11 h-11 glass-effect rounded-full flex items-center justify-center hover:text-white hover:bg-gradient-to-r hover:from-[#8B4513] hover:to-[#D2B48C] transition"
+               class="w-11 h-11 glass-effect rounded-full flex items-center justify-center hover:text-white hover:bg-gradient-to-r hover:from-[#B77B3D] hover:to-[#D4A373] transition"
                aria-label="View">
-               <i class="fas fa-eye"></i>
+               <i class="fas fa-eye icon-accent"></i>
             </a>
           </div>
 
@@ -314,14 +324,14 @@ try {
 
             <!-- Qty -->
             <div class="flex items-center gap-3">
-              <label class="text-sm font-medium text-gray-200">QTY:</label>
+              <label class="text-sm font-semibold muted">QTY:</label>
               <input type="number" min="1" value="1" name="p_qty"
                      class="qty w-24 px-3 py-2 rounded-lg text-center">
             </div>
 
             <!-- Add to cart -->
             <button type="submit" name="add_to_cart"
-                    class="w-full btn-grad py-3.5 rounded-xl font-semibold hover-glow neon-glow transition">
+                    class="w-full btn-grad py-3.5 rounded-xl font-semibold hover-glow transition">
               <i class="fas fa-shopping-cart mr-2"></i> Add to Cart
             </button>
           </div>
@@ -332,8 +342,8 @@ try {
         } else {
           echo '<div class="col-span-full">
                   <div class="glass-effect p-12 rounded-3xl text-center">
-                    <i class="fas fa-box-open text-5xl" style="color:#CD853F"></i>
-                    <p class="mt-4 text-xl text-gray-200">No products available!</p>
+                    <i class="fas fa-box-open text-5xl icon-accent"></i>
+                    <p class="mt-4 text-xl muted">No products available!</p>
                   </div>
                 </div>';
         }

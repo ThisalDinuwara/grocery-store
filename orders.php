@@ -8,6 +8,7 @@ $user_id = $_SESSION['user_id'];
 
 if(!isset($user_id)){
    header('location:login.php');
+   exit;
 }
 
 ?>
@@ -18,7 +19,7 @@ if(!isset($user_id)){
    <meta charset="UTF-8">
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>orders</title>
+   <title>Orders - Kandu Pinnawala</title>
 
    <!-- Tailwind CDN -->
    <script src="https://cdn.tailwindcss.com"></script>
@@ -27,11 +28,11 @@ if(!isset($user_id)){
          theme: {
             extend: {
                colors: {
-                  primary: '#8B4513',   // Saddle Brown
-                  secondary: '#A0522D', // Sienna
-                  accent: '#D2B48C',    // Tan
-                  dark: '#3E2723',      // Dark Brown
-                  darker: '#1B0F0A'     // Deep Brown
+                  primary:   '#B77B3D',  // warm brown
+                  secondary: '#D4A373',  // golden beige
+                  accent:    '#8C6239',  // deep brown
+                  ink:       '#2E1B0E',  // main text
+                  soft:      '#5C3A24',  // subtle text
                },
                fontFamily: {
                   gaming: ['Orbitron', 'monospace']
@@ -49,81 +50,102 @@ if(!isset($user_id)){
 
    <style>
       *{margin:0;padding:0;box-sizing:border-box}
+
+      /* ===== Light Theme Base ===== */
       body{
          font-family:'Inter',sans-serif;
-         background:linear-gradient(135deg,#1B0F0A 0%,#3E2723 50%,#5D4037 100%);
-         color:#fff; overflow-x:hidden;
+         background:linear-gradient(135deg,#FFFDF9 0%, #F7F3ED 50%, #EFE8DE 100%);
+         color:#2E1B0E; /* ink */
+         overflow-x:hidden;
       }
 
-      /* Shared effects (match home.php) */
-      .neon-glow{box-shadow:0 0 20px rgba(139,69,19,.5),0 0 40px rgba(160,82,45,.3),0 0 60px rgba(210,180,140,.2)}
-      .glass-effect{background:rgba(255,255,255,.08);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18)}
-      .hover-glow:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(139,69,19,.35);transition:.3s ease}
-      .gradient-text{background:linear-gradient(45deg,#8B4513,#A0522D,#D2B48C);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+      /* Subtle utilities */
+      .glass-effect{background:rgba(255,255,255,.85);backdrop-filter:blur(10px);border:1px solid rgba(183,123,61,.22)}
+      .hover-elevate:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(183,123,61,.18);transition:.3s ease}
+      .gradient-text{background:linear-gradient(45deg,#B77B3D,#D4A373);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
       .hero-bg{
          background:
-           radial-gradient(circle at 20% 80%, rgba(139,69,19,.35) 0%, transparent 55%),
-           radial-gradient(circle at 80% 20%, rgba(210,180,140,.35) 0%, transparent 55%),
-           radial-gradient(circle at 40% 40%, rgba(160,82,45,.35) 0%, transparent 55%);
+           radial-gradient(circle at 20% 80%, rgba(183,123,61,.18) 0%, transparent 55%),
+           radial-gradient(circle at 80% 20%, rgba(212,163,115,.18) 0%, transparent 55%),
+           radial-gradient(circle at 40% 40%, rgba(140,98,57,.18) 0%, transparent 55%);
       }
 
-      /* Card design for orders */
+      /* ===== Order Card (light) ===== */
       .order-card{
-         background:linear-gradient(180deg,rgba(62,39,35,.92),rgba(62,39,35,.84));
-         border:1px solid rgba(210,180,140,.28);
+         background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(250,245,235,.92));
+         border:1px solid rgba(183,123,61,.26);
          border-radius:22px;
          overflow:hidden;
-         transition:transform .35s ease, box-shadow .35s ease, border-color .35s ease;
+         transition:transform .3s ease, box-shadow .3s ease, border-color .3s ease;
       }
       .order-card:hover{
-         transform:translateY(-8px);
-         border-color:rgba(210,180,140,.55);
-         box-shadow:0 22px 48px rgba(160,82,45,.35);
+         transform:translateY(-6px);
+         border-color:rgba(183,123,61,.5);
+         box-shadow:0 22px 48px rgba(183,123,61,.2);
       }
 
       .badge-price{
          font-size:.95rem;
          padding:.5rem .9rem;
-         border:1px solid rgba(255,255,255,.18);
+         border:1px solid rgba(183,123,61,.25);
+         border-radius:9999px;
+         background:linear-gradient(135deg,#B77B3D,#D4A373);
+         color:#fff;
       }
 
+      .chip{
+         display:inline-flex;align-items:center;gap:.5rem;border-radius:9999px;padding:.5rem .85rem;
+         border:1px solid rgba(183,123,61,.22);
+         background:#fff;color:#6B4E2E;
+      }
+
+      .muted{color:#6B4E2E}
+      .muted-2{color:#8A6A49}
+
+      /* Buttons */
+      .btn-primary{
+         background:linear-gradient(135deg,#B77B3D,#D4A373);
+         color:#fff;font-weight:700;border:none;
+         border-radius:14px;padding:.9rem 1rem;
+         transition:.25s; box-shadow:0 12px 28px rgba(183,123,61,.2);
+      }
+      .btn-primary:hover{transform:translateY(-2px)}
+
+      /* Status pills (use Tailwind utility colors for readability on light bg) */
       .pill{
-         border:1px solid rgba(255,255,255,.18);
-         background:rgba(255,255,255,.08);
-         color:#FCEBD0;
+         display:inline-flex;align-items:center;gap:.5rem;
+         padding:.4rem .7rem;border-radius:9999px;font-weight:700;font-size:.8rem;
+         border-width:1px;border-style:solid;
       }
-
-      .muted{color:#d8c9b8}
-      .muted-2{color:#cbbba9}
-      .chip{display:inline-flex;align-items:center;gap:.5rem;border-radius:9999px;padding:.4rem .75rem}
    </style>
 </head>
 <body>
    
 <?php include 'header.php'; ?>
 
-<!-- Hero (matches the home aesthetic) -->
+<!-- Hero (light aesthetic) -->
 <section class="relative min-h-[40vh] md:min-h-[50vh] flex items-center justify-center overflow-hidden hero-bg">
-  <div class="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-[rgba(139,69,19,0.22)] to-[rgba(210,180,140,0.22)] rounded-full blur-3xl"></div>
-  <div class="absolute bottom-10 right-10 w-64 h-64 bg-gradient-to-r from-[rgba(160,82,45,0.22)] to-[rgba(139,69,19,0.22)] rounded-full blur-3xl"></div>
+  <div class="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-[rgba(183,123,61,0.18)] to-[rgba(212,163,115,0.18)] rounded-full blur-3xl"></div>
+  <div class="absolute bottom-10 right-10 w-64 h-64 bg-gradient-to-r from-[rgba(212,163,115,0.18)] to-[rgba(140,98,57,0.18)] rounded-full blur-3xl"></div>
 
   <div class="container mx-auto px-6 lg:px-12 relative z-10 text-center">
      <h1 class="text-5xl lg:text-7xl font-bold leading-tight mb-4">
-       <span class="gradient-text font-gaming">YOUR</span> <span class="text-white">ORDERS</span>
+       <span class="gradient-text font-gaming">YOUR</span> <span class="">ORDERS</span>
      </h1>
-     <div class="h-1 w-28 bg-gradient-to-r from-[#8B4513] to-[#D2B48C] rounded-full mx-auto mb-6"></div>
-     <p class="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto">
+     <div class="h-1 w-28 bg-gradient-to-r from-[#B77B3D] to-[#D4A373] rounded-full mx-auto mb-6"></div>
+     <p class="text-lg md:text-xl muted max-w-3xl mx-auto">
        Track purchases, check payment status, and review delivery details—all in one place.
      </p>
      <div class="mt-6 flex items-center justify-center gap-3">
-       <span class="chip glass-effect"><i class="fa-solid fa-shield-check"></i> Secure Orders</span>
-       <span class="chip glass-effect"><i class="fa-solid fa-truck-fast"></i> Fast Shipping</span>
-       <span class="chip glass-effect"><i class="fa-solid fa-headset"></i> 24/7 Support</span>
+       <span class="chip"><i class="fa-solid fa-shield-check"></i> Secure Orders</span>
+       <span class="chip"><i class="fa-solid fa-truck-fast"></i> Fast Shipping</span>
+       <span class="chip"><i class="fa-solid fa-headset"></i> 24/7 Support</span>
      </div>
   </div>
 </section>
 
-<!-- Orders Grid (PHP unchanged, just themed UI) -->
+<!-- Orders Grid -->
 <section id="orders" class="py-16">
   <div class="container mx-auto px-6 lg:px-12">
 
@@ -131,8 +153,8 @@ if(!isset($user_id)){
       <h2 class="text-4xl lg:text-5xl font-bold mb-4">
         <span class="gradient-text font-gaming">PLACED ORDERS</span>
       </h2>
-      <div class="h-1 w-24 bg-gradient-to-r from-[#8B4513] to-[#D2B48C] rounded-full mx-auto"></div>
-      <p class="text-lg text-gray-200 mt-6 max-w-3xl mx-auto">
+      <div class="h-1 w-24 bg-gradient-to-r from-[#B77B3D] to-[#D4A373] rounded-full mx-auto"></div>
+      <p class="text-lg muted mt-6 max-w-3xl mx-auto">
         Review details of your recent purchases and payment confirmation.
       </p>
     </div>
@@ -147,16 +169,16 @@ if(!isset($user_id)){
 
             $status = strtolower($fetch_orders['payment_status']);
             if(in_array($status, ['paid','completed','success'])) {
-              $statusClass = 'bg-green-100 text-green-700 border-green-200';
+              $statusClass = 'bg-green-100 text-green-800 border-green-200';
               $dotClass    = 'bg-green-500';
             } elseif(in_array($status, ['pending','processing'])) {
-              $statusClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+              $statusClass = 'bg-yellow-100 text-yellow-800 border-yellow-200';
               $dotClass    = 'bg-yellow-500';
             } elseif(in_array($status, ['cancelled','canceled','failed'])) {
-              $statusClass = 'bg-red-100 text-red-700 border-red-200';
+              $statusClass = 'bg-red-100 text-red-800 border-red-200';
               $dotClass    = 'bg-red-500';
             } else {
-              $statusClass = 'bg-gray-100 text-gray-700 border-gray-200';
+              $statusClass = 'bg-gray-100 text-gray-800 border-gray-200';
               $dotClass    = 'bg-gray-400';
             }
       ?>
@@ -164,11 +186,11 @@ if(!isset($user_id)){
         <div class="order-card relative">
           <!-- Top bar with price + status -->
           <div class="px-4 py-3 flex items-center justify-between">
-            <div class="inline-flex items-center gap-2 badge-price rounded-full bg-gradient-to-r from-[#8B4513] to-[#D2B48C] text-white">
+            <div class="inline-flex items-center gap-2 badge-price">
               <i class="fas fa-receipt"></i>
               <span class="font-semibold">Total: Rs <?= htmlspecialchars($fetch_orders['total_price']); ?>/-</span>
             </div>
-            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border <?= $statusClass; ?>">
+            <span class="pill <?= $statusClass; ?>">
               <span class="w-2 h-2 rounded-full <?= $dotClass; ?>"></span>
               <?= htmlspecialchars($fetch_orders['payment_status']); ?>
             </span>
@@ -176,58 +198,58 @@ if(!isset($user_id)){
 
           <!-- Body -->
           <div class="p-6">
-            <h3 class="text-xl font-bold text-white mb-1">
+            <h3 class="text-xl font-extrabold mb-1 text-[color:var(--tw-colors-ink,#2E1B0E)]">
               <?php if(isset($fetch_orders['id'])): ?>
                 Order #<?= (int)$fetch_orders['id']; ?>
               <?php else: ?>
                 Order Details
               <?php endif; ?>
             </h3>
-            <p class="text-sm muted mb-4">Placed on <?= htmlspecialchars($fetch_orders['placed_on']); ?></p>
+            <p class="text-sm muted-2 mb-4">Placed on <?= htmlspecialchars($fetch_orders['placed_on']); ?></p>
 
             <div class="space-y-3">
               <div class="flex items-start gap-3">
-                <i class="fas fa-user text-accent mt-1"></i>
+                <i class="fas fa-user text-[color:#8C6239] mt-1"></i>
                 <div>
                   <p class="text-[11px] uppercase tracking-wide muted-2">Name</p>
-                  <p class="font-medium text-white"><?= htmlspecialchars($fetch_orders['name']); ?></p>
+                  <p class="font-semibold"><?= htmlspecialchars($fetch_orders['name']); ?></p>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
-                <i class="fas fa-envelope text-accent mt-1"></i>
+                <i class="fas fa-envelope text-[color:#8C6239] mt-1"></i>
                 <div>
                   <p class="text-[11px] uppercase tracking-wide muted-2">Email</p>
-                  <p class="font-medium text-white"><?= htmlspecialchars($fetch_orders['email']); ?></p>
+                  <p class="font-medium"><?= htmlspecialchars($fetch_orders['email']); ?></p>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
-                <i class="fas fa-phone text-accent mt-1"></i>
+                <i class="fas fa-phone text-[color:#8C6239] mt-1"></i>
                 <div>
                   <p class="text-[11px] uppercase tracking-wide muted-2">Number</p>
-                  <p class="font-medium text-white"><?= htmlspecialchars($fetch_orders['number']); ?></p>
+                  <p class="font-medium"><?= htmlspecialchars($fetch_orders['number']); ?></p>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
-                <i class="fas fa-location-dot text-accent mt-1"></i>
+                <i class="fas fa-location-dot text-[color:#8C6239] mt-1"></i>
                 <div>
                   <p class="text-[11px] uppercase tracking-wide muted-2">Address</p>
-                  <p class="font-medium text-white"><?= nl2br(htmlspecialchars($fetch_orders['address'])); ?></p>
+                  <p class="font-medium"><?= nl2br(htmlspecialchars($fetch_orders['address'])); ?></p>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
-                <i class="fas fa-credit-card text-accent mt-1"></i>
+                <i class="fas fa-credit-card text-[color:#8C6239] mt-1"></i>
                 <div>
                   <p class="text-[11px] uppercase tracking-wide muted-2">Payment Method</p>
-                  <p class="font-medium text-white"><?= htmlspecialchars($fetch_orders['method']); ?></p>
+                  <p class="font-medium"><?= htmlspecialchars($fetch_orders['method']); ?></p>
                 </div>
               </div>
 
               <div class="flex items-start gap-3">
-                <i class="fas fa-boxes-stacked text-accent mt-1"></i>
+                <i class="fas fa-boxes-stacked text-[color:#8C6239] mt-1"></i>
                 <div class="flex-1">
                   <p class="text-[11px] uppercase tracking-wide muted-2">Items</p>
                   <div class="mt-1 p-3 rounded-xl glass-effect text-sm leading-relaxed max-h-32 overflow-auto">
@@ -239,7 +261,7 @@ if(!isset($user_id)){
 
             <!-- Action -->
             <a href="shop.php"
-               class="mt-6 inline-flex items-center justify-center w-full bg-gradient-to-r from-[#8B4513] to-[#D2B48C] text-white py-3 rounded-xl font-semibold hover-glow neon-glow transition duration-300">
+               class="mt-6 inline-flex items-center justify-center w-full btn-primary hover-elevate">
               <i class="fas fa-store mr-2"></i> Shop More
             </a>
           </div>
@@ -251,10 +273,10 @@ if(!isset($user_id)){
           echo '
             <div class="col-span-full text-center">
               <div class="glass-effect p-12 rounded-3xl max-w-md mx-auto">
-                <i class="fas fa-box-open text-6xl" style="color:#CD853F"></i>
-                <p class="text-2xl text-gray-200 font-medium mt-4">No orders placed yet!</p>
+                <i class="fas fa-box-open text-6xl" style="color:#8C6239"></i>
+                <p class="text-2xl muted font-medium mt-4">No orders placed yet!</p>
                 <a href="shop.php"
-                   class="mt-6 inline-flex items-center justify-center bg-gradient-to-r from-[#8B4513] to-[#D2B48C] text-white px-6 py-3 rounded-xl font-semibold hover-glow neon-glow transition">
+                   class="mt-6 inline-flex items-center justify-center btn-primary hover-elevate px-6 py-3">
                   <i class="fas fa-store mr-2"></i> Start Shopping
                 </a>
               </div>

@@ -106,7 +106,11 @@ if (isset($_POST['add_to_cart'])) {
          theme: {
             extend: {
                colors: {
-                  primary:'#FF7F00', secondary:'#FF4500', accent:'#FFA500', dark:'#1A0F00', darker:'#0D0500'
+                  primary:'#B77B3D',   // warm brown
+                  secondary:'#D4A373', // golden beige
+                  accent:'#8C6239',    // deep brown
+                  ink:'#2E1B0E',       // text
+                  soft:'#5C3A24',      // subtle text
                },
                fontFamily: { gaming: ['Orbitron','monospace'] }
             }
@@ -119,26 +123,111 @@ if (isset($_POST['add_to_cart'])) {
    <link rel="stylesheet" href="css/style.css">
 
    <style>
-      body{background:linear-gradient(135deg,#0D0500 0%,#1A0F00 50%,#251200 100%);color:#FFF7EE;overflow-x:hidden}
-      .text-base{font-size:1.20rem!important}.text-lg{font-size:1.35rem!important}.text-xl{font-size:1.50rem!important}
+      /* ===== Light Theme (off-white gradient base) ===== */
+      body{
+         background: linear-gradient(135deg,#FFFDF9 0%, #F7F3ED 50%, #EFE8DE 100%);
+         color: #2E1B0E; /* ink */
+         overflow-x:hidden;
+      }
+
+      .text-base{font-size:1.20rem!important}
+      .text-lg{font-size:1.35rem!important}
+      .text-xl{font-size:1.50rem!important}
       p,label,input,button,a,li{font-size:1.20rem}
-      .p-category{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center;padding:1.25rem 1rem;margin-top:1rem}
-      .p-category a{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#FFE8CF;padding:.6rem 1rem;border-radius:999px;transition:.25s;text-decoration:none}
-      .p-category a:hover{background:linear-gradient(135deg,#FF7F00,#FFA500);color:#111;transform:translateY(-2px);box-shadow:0 10px 22px rgba(255,165,0,.25)}
-      .product-card{background:linear-gradient(180deg,rgba(26,15,0,.92),rgba(26,15,0,.84));border:1px solid rgba(255,200,140,.28);border-radius:22px;backdrop-filter:blur(16px);overflow:hidden;position:relative;transition:transform .35s,box-shadow .35s,border-color .35s}
-      .product-card:hover{transform:translateY(-8px) scale(1.015);border-color:rgba(255,200,140,.55);box-shadow:0 22px 48px rgba(255,127,0,.35)}
-      .thumb{border-radius:18px;border:1px solid rgba(255,200,140,.25);overflow:hidden;background:radial-gradient(600px 120px at 20% 0%,rgba(255,165,0,.18),transparent 60%)}
-      .product-card img{transition:transform .6s}.group:hover .product-card img{transform:scale(1.07)}
-      .price-badge{background:linear-gradient(135deg,#FF7F00,#FF4500);color:#111;padding:.6rem 1rem;border-radius:999px;font-weight:800;font-size:1.05rem;border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 24px rgba(255,165,0,.28)}
-      .chip{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);color:#E8D7BF;transition:.25s}
-      .chip:hover{background:linear-gradient(135deg,#FF7F00,#FFA500);color:#111;transform:translateY(-2px)}
-      .product-title{color:#FFF7EE;font-weight:800;letter-spacing:.2px;line-height:1.25;text-shadow:0 1px 0 rgba(0,0,0,.35);font-size:1.25rem}
-      .product-meta{color:#FFE8CF}
-      .qty{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);color:#fff}
-      .qty:focus{outline:none;box-shadow:0 0 0 3px rgba(255,127,0,.35)}
-      .btn-cart{background:linear-gradient(135deg,#FF7F00,#FF4500);color:#111;font-weight:800;letter-spacing:.2px;padding:.95rem 1rem;border-radius:14px;transition:.25s;box-shadow:0 12px 28px rgba(255,127,0,.25)}
-      .btn-cart:hover{transform:translateY(-2px) scale(1.01)}
-      .section-title{color:#FFF3E4}.section-sub{color:#E8DAC8}
+
+      /* Category chips */
+      .p-category{
+         display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center;
+         padding:1.25rem 1rem;margin-top:1rem
+      }
+      .p-category a{
+         background: rgba(255,255,255,.85);
+         border:1px solid rgba(183,123,61,.25); /* brown border */
+         color:#6B4E2E;
+         padding:.6rem 1rem;border-radius:999px;
+         transition:.25s;text-decoration:none
+      }
+      .p-category a:hover{
+         background: linear-gradient(135deg,#B77B3D,#D4A373);
+         color:#fff; transform:translateY(-2px);
+         box-shadow:0 10px 22px rgba(183,123,61,.22)
+      }
+
+      /* Product card */
+      .product-card{
+         background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(250,245,235,.9));
+         border:1px solid rgba(183,123,61,.28);
+         border-radius:22px; backdrop-filter: blur(10px);
+         overflow:hidden; position:relative;
+         transition:transform .35s, box-shadow .35s, border-color .35s
+      }
+      .product-card:hover{
+         transform:translateY(-8px) scale(1.015);
+         border-color: rgba(183,123,61,.55);
+         box-shadow:0 22px 48px rgba(183,123,61,.22)
+      }
+
+      .thumb{
+         border-radius:18px;
+         border:1px solid rgba(183,123,61,.25);
+         overflow:hidden;
+         background: radial-gradient(600px 120px at 20% 0%, rgba(212,163,115,.18), transparent 60%);
+      }
+      .product-card img{ transition: transform .6s }
+      .group:hover .product-card img{ transform: scale(1.07) }
+
+      /* Price badge */
+      .price-badge{
+         background: linear-gradient(135deg,#B77B3D,#D4A373);
+         color:#fff;
+         padding:.6rem 1rem;border-radius:999px;
+         font-weight:800;font-size:1.05rem;
+         border:1px solid rgba(183,123,61,.25);
+         box-shadow:0 10px 24px rgba(183,123,61,.22)
+      }
+
+      /* Icon chips (view/heart) */
+      .chip{
+         width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+         border-radius:999px;
+         background:#ffffff;
+         border:1px solid rgba(183,123,61,.25);
+         color:#6B4E2E;
+         transition:.25s
+      }
+      .chip:hover{
+         background: linear-gradient(135deg,#B77B3D,#D4A373);
+         color:#fff; transform:translateY(-2px)
+      }
+
+      .product-title{
+         color:#3D2B1F;
+         font-weight:800; letter-spacing:.2px; line-height:1.25;
+         font-size:1.25rem
+      }
+      .product-meta{ color:#5C3A24 }
+
+      .qty{
+         background:#fff;
+         border:1px solid rgba(183,123,61,.3);
+         color:#2E1B0E;
+         border-radius:10px;
+      }
+      .qty:focus{
+         outline:none;
+         box-shadow:0 0 0 3px rgba(183,123,61,.28)
+      }
+
+      .btn-cart{
+         background: linear-gradient(135deg,#B77B3D,#D4A373);
+         color:#fff; font-weight:800; letter-spacing:.2px;
+         padding:.95rem 1rem; border-radius:14px; transition:.25s;
+         box-shadow:0 12px 28px rgba(183,123,61,.22)
+      }
+      .btn-cart:hover{ transform:translateY(-2px) scale(1.01) }
+
+      .section-title{ color:#3D2B1F }
+      .section-sub{ color:#6B4E2E }
    </style>
 </head>
 <body>
@@ -199,7 +288,7 @@ if (isset($_POST['add_to_cart'])) {
 
                   <div class="flex items-center gap-3">
                      <label class="product-meta font-semibold">QTY:</label>
-                     <input type="number" min="1" value="1" name="p_qty" class="qty w-24 px-3 py-2 rounded-lg text-center transition-all">
+                     <input type="number" min="1" value="1" name="p_qty" class="qty w-24 px-3 py-2 text-center transition-all">
                   </div>
 
                   <button type="submit" name="add_to_cart" class="btn-cart w-full">
@@ -212,10 +301,10 @@ if (isset($_POST['add_to_cart'])) {
                endwhile;
             else:
                echo '<div class="col-span-full text-center py-16">
-                        <div class="mx-auto inline-flex items-center justify-center w-20 h-20 rounded-full" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);">
-                           <i class="fas fa-box-open text-3xl" style="color:#FFE8CF"></i>
+                        <div class="mx-auto inline-flex items-center justify-center w-20 h-20 rounded-full" style="background:#fff;border:1px solid rgba(183,123,61,.25);">
+                           <i class="fas fa-box-open text-3xl" style="color:#6B4E2E"></i>
                         </div>
-                        <p class="mt-6 text-2xl" style="color:#FFE8CF;">No products available yet!</p>
+                        <p class="mt-6 text-2xl" style="color:#6B4E2E;">No products available yet!</p>
                      </div>';
             endif;
          ?>

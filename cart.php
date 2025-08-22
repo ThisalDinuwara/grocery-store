@@ -1,273 +1,233 @@
 <?php
-
 @include 'config.php';
-
 session_start();
 
-$user_id = $_SESSION['user_id'];
-
-if(!isset($user_id)){
+$user_id = $_SESSION['user_id'] ?? null;
+if(!$user_id){
    header('location:login.php');
-};
+   exit;
+}
 
+$message = [];
+
+/* ---- delete single ---- */
 if(isset($_GET['delete'])){
-   $delete_id = $_GET['delete'];
-   $delete_cart_item = $conn->prepare("DELETE FROM `cart` WHERE id = ?");
-   $delete_cart_item->execute([$delete_id]);
+   $delete_id = (int)$_GET['delete'];
+   $stmt = $conn->prepare("DELETE FROM `cart` WHERE id = ? AND user_id = ?");
+   $stmt->execute([$delete_id, $user_id]);
    header('location:cart.php');
+   exit;
 }
 
+/* ---- delete all ---- */
 if(isset($_GET['delete_all'])){
-   $delete_cart_item = $conn->prepare("DELETE FROM `cart` WHERE user_id = ?");
-   $delete_cart_item->execute([$user_id]);
+   $stmt = $conn->prepare("DELETE FROM `cart` WHERE user_id = ?");
+   $stmt->execute([$user_id]);
    header('location:cart.php');
+   exit;
 }
 
+/* ---- update qty ---- */
 if(isset($_POST['update_qty'])){
-   $cart_id = $_POST['cart_id'];
-   $p_qty = $_POST['p_qty'];
-   $p_qty = filter_var($p_qty, FILTER_SANITIZE_STRING);
-   $update_qty = $conn->prepare("UPDATE `cart` SET quantity = ? WHERE id = ?");
-   $update_qty->execute([$p_qty, $cart_id]);
-   $message[] = 'cart quantity updated';
+   $cart_id = (int)($_POST['cart_id'] ?? 0);
+   $p_qty   = (int)($_POST['p_qty'] ?? 1);
+   if($p_qty < 1) $p_qty = 1;
+
+   $update_qty = $conn->prepare("UPDATE `cart` SET quantity = ? WHERE id = ? AND user_id = ?");
+   $update_qty->execute([$p_qty, $cart_id, $user_id]);
+   $message[] = 'Cart quantity updated';
 }
 
+/* ---- fetch items ---- */
+$grand_total = 0.0;
+$select_cart = $conn->prepare("SELECT * FROM `cart` WHERE user_id = ? ORDER BY id DESC");
+$select_cart->execute([$user_id]);
+$cart_items = $select_cart->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <meta charset="UTF-8">
-   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta charset="UTF-8" />
+   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
    <title>Shopping Cart — Kandu Pinnawala</title>
 
-   <!-- Tailwind CDN -->
+   <!-- Tailwind -->
    <script src="https://cdn.tailwindcss.com"></script>
    <script>
-      tailwind.config = {
-         theme: {
-            extend: {
-               colors: {
-                  primary: '#8B4513',   // Saddle Brown
-                  secondary: '#A0522D', // Sienna
-                  accent: '#D2B48C',    // Tan
-                  dark: '#3E2723',      // Dark Brown
-                  wood: '#5D4037',
-                  orange: '#FF6B35'     // Orange for headings
-               },
-               boxShadow: {
-                  'neon': '0 0 20px rgba(139, 69, 19, 0.5), 0 0 40px rgba(160, 82, 45, 0.3), 0 0 60px rgba(210, 180, 140, 0.2)'
-               },
-               fontFamily: {
-                  'gaming': ['Orbitron', 'monospace']
-               }
-            }
+     tailwind.config = {
+       theme: {
+         extend: {
+           colors: {
+             primary:   '#7B5E42',  // Cocoa Brown
+             secondary: '#A67B5B',  // Soft Brown
+             accent:    '#C89F6D',  // Warm Tan
+             dark:      '#3E2723',  // Deep Brown
+             offwhite:  '#F5F3EE',
+             offwhite2: '#EDE9E3',
+           },
+           fontFamily: { gaming:['Orbitron','monospace'], inter:['Inter','sans-serif'] }
          }
-      }
+       }
+     }
    </script>
 
-   <!-- Font Awesome -->
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-   
-   <!-- Google Fonts -->
+   <!-- Fonts & Icons -->
    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-   <!-- Custom CSS (keep your existing site styles) -->
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
    <link rel="stylesheet" href="css/style.css">
 
    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
+     /* ===== THEME (same as orders.php) ===== */
+     *{box-sizing:border-box}
+     body{
+       font-family:'Inter',sans-serif; line-height:1.6; color:#3E2723;
+       background:linear-gradient(135deg,#F9F9F6 0%,#F2EFEA 50%,#EAE5DD 100%);
+       overflow-x:hidden;
+     }
+     /* Hero mist / soft spotlight */
+     .hero-bg{
+       background:
+         radial-gradient(900px 340px at 50% 30%, rgba(234,226,214,.65) 0%, transparent 60%),
+         radial-gradient(800px 320px at 15% 70%, rgba(245,240,232,.5) 0%, transparent 65%),
+         radial-gradient(900px 340px at 85% 70%, rgba(255,255,255,.5) 0%, transparent 65%);
+     }
+     /* Cards */
+     .glass-effect{
+       background:rgba(255,255,255,.68);
+       -webkit-backdrop-filter:blur(10px);
+       backdrop-filter:blur(10px);
+       border:1px solid rgba(140,120,100,.18);
+       border-radius:20px;
+     }
+     .shadow-soft{ box-shadow:0 6px 18px rgba(120,100,80,.12), 0 12px 36px rgba(120,100,80,.10); }
+     .allow-overflow{ overflow:visible!important; }
 
-      body {
-         font-family: 'Inter', sans-serif;
-         background: linear-gradient(135deg, #1B0F0A 0%, #3E2723 50%, #5D4037 100%);
-         color: white;
-         overflow-x: hidden;
-      }
+     /* Headings & accents */
+     .heading{ font-family:'Orbitron',monospace; font-weight:800; letter-spacing:-0.5px; }
+     .subhead{ color:#6a584d; }
+     .gradient-text{
+       background:linear-gradient(45deg,#C89F6D,#A67B5B,#7B5E42);
+       -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+     }
 
-      .neon-glow {
-         box-shadow: 0 0 20px rgba(139, 69, 19, 0.5),
-                     0 0 40px rgba(160, 82, 45, 0.3),
-                     0 0 60px rgba(210, 180, 140, 0.2);
-      }
+     /* Badges */
+     .badge{
+       display:inline-flex; align-items:center; gap:.5rem;
+       white-space:nowrap; line-height:1.2; padding:.42rem .9rem; border-radius:9999px;
+       border:1px solid rgba(120,100,80,.22);
+       background:linear-gradient(135deg,#E9E4DC,#D7CFC4);
+       font-family:'Orbitron',monospace; font-weight:700; font-size:.85rem;
+       color:#3E2723; letter-spacing:.35px;
+     }
 
-      .glass-effect {
-         background: rgba(255, 255, 255, 0.08);
-         backdrop-filter: blur(10px);
-         border: 1px solid rgba(255, 255, 255, 0.18);
-      }
+     /* Inputs & buttons on light theme */
+     .input{
+       background:#fff; border:1px solid #ddd; border-radius:12px; padding:.75rem 1rem;
+       outline:none; transition:box-shadow .2s, border-color .2s;
+     }
+     .input:focus{ border-color:#C89F6D; box-shadow:0 0 0 3px rgba(200,159,109,.25); }
 
-      .hover-glow:hover {
-         transform: translateY(-5px);
-         box-shadow: 0 10px 25px rgba(139, 69, 19, 0.35);
-         transition: all 0.3s ease;
-      }
+     .btn{
+       display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+       border-radius:12px; padding:.75rem 1rem; font-weight:600;
+       transition:transform .15s ease, box-shadow .2s ease, background .2s ease;
+     }
+     .btn-ghost{ background:rgba(255,255,255,.7); border:1px solid rgba(140,120,100,.18); }
+     .btn-ghost:hover{ transform:translateY(-2px); box-shadow:0 8px 16px rgba(120,100,80,.14); }
+     .btn-primary{
+       color:#fff; background:linear-gradient(135deg,#C89F6D,#7B5E42);
+       box-shadow:0 8px 18px rgba(120,100,80,.18);
+     }
+     .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 12px 22px rgba(120,100,80,.22); }
 
-      .floating-animation { animation: floating 3s ease-in-out infinite; }
-      @keyframes floating {
-         0%, 100% { transform: translateY(0); }
-         50% { transform: translateY(-10px); }
-      }
-
-      /* Updated gradient text for orange color */
-      .gradient-text {
-         background: linear-gradient(45deg, #FF6B35, #FF8C42, #FFA366);
-         -webkit-background-clip: text; 
-         -webkit-text-fill-color: transparent; 
-         background-clip: text;
-         color: #FF6B35; /* Fallback color */
-      }
-
-      /* Orange color for specific headings */
-      .orange-text {
-         color: #FF6B35 !important;
-      }
-
-      /* Ensure all other text is white */
-      .white-text {
-         color: white !important;
-      }
-
-      .cyber-border {
-         position: relative; border: 2px solid transparent;
-         background: linear-gradient(135deg, rgba(139, 69, 19, 0.2), rgba(160, 82, 45, 0.2)) border-box;
-         -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-         -webkit-mask-composite: exclude;
-      }
-
-      .message {
-         position: fixed; top: 20px; right: 20px; background: rgba(139, 69, 19, 0.9);
-         backdrop-filter: blur(10px); color: white; padding: 15px 20px; border-radius: 10px;
-         border: 1px solid rgba(255, 255, 255, 0.2); z-index: 1000; animation: slideIn 0.3s ease;
-      }
-      @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1); } }
-
-      .ai-chat-widget {
-         position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
-         background: linear-gradient(135deg, #8B4513, #D2B48C);
-         border-radius: 50%; display: flex; align-items: center; justify-content: center;
-         cursor: pointer; box-shadow: 0 10px 25px rgba(139, 69, 19, 0.4); animation: pulse 2s infinite; z-index: 1000;
-      }
-      @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-
-      .hero-bg {
-         background:
-           radial-gradient(circle at 20% 80%, rgba(139, 69, 19, 0.35) 0%, transparent 55%),
-           radial-gradient(circle at 80% 20%, rgba(210, 180, 140, 0.35) 0%, transparent 55%),
-           radial-gradient(circle at 40% 40%, rgba(160, 82, 45, 0.35) 0%, transparent 55%);
-      }
-
-      /* Typography tweaks from home.php */
-      .text-base{font-size:1.125rem!important;}  /* 18px */
-      .text-lg{font-size:1.25rem!important;}     /* 20px */
-      .text-xl{font-size:1.375rem!important;}    /* 22px */
-      p, label, input, button, a, li { font-size:1.12rem; color: white; }
-
-      /* Product-like card polish (used for cart items) */
-      .card-sheen{ background: radial-gradient(600px 120px at 20% 0%, rgba(210,180,140,.18), transparent 60%); }
-
-      /* Ensure all text elements are white by default */
-      h1, h2, h3, h4, h5, h6, p, span, label, input, button, a, li, div {
-         color: white;
-      }
-
-      /* Force white color for specific elements */
-      .force-white {
-         color: white !important;
-      }
+     /* Flash message */
+     .message{
+       position:fixed; top:20px; right:20px; z-index:1000;
+       background:rgba(245,243,238,.96);
+       -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+       color:#3E2723; padding:12px 16px; border-radius:12px;
+       border:1px solid rgba(140,120,100,.25); animation:slideIn .25s ease;
+     }
+     @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
    </style>
 </head>
 <body>
 
+<?php if(!empty($message)): foreach($message as $m): ?>
+  <div class="message"><?= htmlspecialchars($m); ?></div>
+<?php endforeach; endif; ?>
+
 <?php include 'header.php'; ?>
 
-<?php
-// Fetch all items first
-$grand_total = 0;
-$select_cart = $conn->prepare("SELECT * FROM `cart` WHERE user_id = ?");
-$select_cart->execute([$user_id]);
-$cart_items = $select_cart->fetchAll(PDO::FETCH_ASSOC);
-?>
-
-<!-- Themed Section (same background motifs as home.php) -->
 <section class="relative min-h-screen flex items-start justify-center overflow-hidden hero-bg py-16">
-  <!-- Animated background orbs (match home.php) -->
-  <div class="absolute top-10 left-10 w-96 h-96 bg-gradient-to-br from-[rgba(139,69,19,0.25)] to-[rgba(210,180,140,0.22)] rounded-full blur-3xl floating-animation"></div>
-  <div class="absolute bottom-10 right-10 w-80 h-80 bg-gradient-to-tr from-[rgba(210,180,140,0.25)] to-[rgba(160,82,45,0.22)] rounded-full blur-3xl floating-animation" style="animation-delay: 1s;"></div>
-
   <div class="container mx-auto px-6 lg:px-12 grid lg:grid-cols-3 gap-8 items-start relative z-10 w-full">
+
+    <!-- Title -->
     <div class="lg:col-span-3 text-center mb-6">
-      <h2 class="text-4xl lg:text-5xl font-extrabold tracking-tight">
-        <span class="gradient-text">SHOPPING CART</span>
+      <h2 class="heading text-4xl lg:text-5xl">
+        <span class="gradient-text">YOUR</span> <span class="heading">CART</span>
       </h2>
-      <p class="mt-3 text-lg force-white">Review items, update quantities, or proceed to checkout.</p>
+      <p class="mt-3 text-lg subhead">Review items, update quantities, or proceed to checkout.</p>
+
+      <!-- Mini feature chips (optional; match orders hero chips) -->
+      <div class="mt-4 flex items-center justify-center gap-3 flex-wrap">
+        <span class="badge"><i class="fa-solid fa-shield-halved"></i> Secure Checkout</span>
+        <span class="badge"><i class="fa-solid fa-truck-fast"></i> Fast Shipping</span>
+        <span class="badge"><i class="fa-solid fa-headset"></i> 24/7 Support</span>
+      </div>
     </div>
 
     <?php if(count($cart_items) > 0): ?>
-      <!-- Items List -->
+      <!-- Items -->
       <div class="lg:col-span-2 space-y-6">
-        <?php foreach($cart_items as $fetch_cart): 
-              $sub_total = ((float)$fetch_cart['price'] * (int)$fetch_cart['quantity']);
-              $grand_total += $sub_total;
+        <?php foreach($cart_items as $row):
+              $name  = htmlspecialchars($row['name']);
+              $img   = htmlspecialchars($row['image']);
+              $pid   = (int)$row['pid'];
+              $id    = (int)$row['id'];
+              $price = (float)$row['price'];
+              $qty   = (int)$row['quantity'];
+              $sub   = $price * $qty;
+              $grand_total += $sub;
         ?>
-        <form action="" method="POST"
-              class="group glass-effect neon-glow rounded-3xl overflow-hidden border border-[rgba(210,180,140,0.28)]">
-          <!-- Card header -->
-          <div class="px-4 py-3 flex items-center justify-between bg-gradient-to-r from-primary/70 to-accent/60 backdrop-blur">
-            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-effect force-white text-sm font-bold border border-[rgba(255,255,255,0.25)]">
-              <i class="fas fa-tag text-accent"></i>
-              <span class="force-white">Rs <?= number_format((float)$fetch_cart['price'], 2); ?>/-</span>
-            </div>
+        <form action="" method="POST" class="glass-effect shadow-soft allow-overflow">
+          <!-- Top bar with price badge + actions -->
+          <div class="px-4 py-3 flex items-center justify-between">
+            <span class="badge"><i class="fa-solid fa-tag"></i> Rs <?= number_format($price,2); ?>/-</span>
             <div class="flex items-center gap-2">
-              <a href="view_page.php?pid=<?= (int)$fetch_cart['pid']; ?>"
-                 class="w-10 h-10 glass-effect rounded-full flex items-center justify-center force-white hover-glow border border-[rgba(255,255,255,0.25)]"
-                 title="View item">
-                <i class="fas fa-eye force-white"></i>
+              <a href="view_page.php?pid=<?= $pid; ?>" class="btn btn-ghost w-10 h-10 rounded-full" title="View item">
+                <i class="fa-solid fa-eye"></i>
               </a>
-              <a href="cart.php?delete=<?= (int)$fetch_cart['id']; ?>" onclick="return confirm('Delete this from cart?');"
-                 class="w-10 h-10 glass-effect rounded-full flex items-center justify-center force-white hover-glow border border-[rgba(255,255,255,0.25)]"
-                 title="Remove">
-                <i class="fas fa-times force-white"></i>
+              <a href="cart.php?delete=<?= $id; ?>" onclick="return confirm('Delete this from cart?');" class="btn btn-ghost w-10 h-10 rounded-full" title="Remove">
+                <i class="fa-solid fa-xmark"></i>
               </a>
             </div>
           </div>
 
-          <!-- Card body -->
-          <div class="p-6">
+          <!-- Body -->
+          <div class="p-6 pt-3">
             <div class="flex flex-col sm:flex-row gap-6">
-              <div class="w-full sm:w-40 h-40 rounded-2xl overflow-hidden flex-shrink-0 border border-[rgba(210,180,140,0.25)] bg-[rgba(255,255,255,0.06)] card-sheen">
-                <img src="uploaded_img/<?= htmlspecialchars($fetch_cart['image']); ?>"
-                     alt="<?= htmlspecialchars($fetch_cart['name']); ?>"
-                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                     onerror="this.src='uploaded_img/placeholder.png'">
+              <div class="w-full sm:w-40 h-40 rounded-2xl overflow-hidden flex-shrink-0 border border-neutral-200 bg-white">
+                <img src="uploaded_img/<?= $img; ?>" alt="<?= $name; ?>" class="w-full h-full object-cover" onerror="this.src='uploaded_img/placeholder.png'">
               </div>
 
               <div class="flex-1">
-                <h3 class="text-xl font-bold force-white mb-2"><?= htmlspecialchars($fetch_cart['name']); ?></h3>
-
-                <input type="hidden" name="cart_id" value="<?= (int)$fetch_cart['id']; ?>">
+                <h3 class="text-xl font-semibold mb-2"><?= $name; ?></h3>
+                <input type="hidden" name="cart_id" value="<?= $id; ?>">
 
                 <div class="grid sm:grid-cols-2 gap-4 items-end">
-                  <!-- Qty control -->
                   <div>
-                    <label class="block text-sm font-medium force-white mb-2">Quantity</label>
+                    <label class="block text-sm font-medium mb-2">Quantity</label>
                     <div class="flex items-center gap-2">
-                      <input type="number" min="1" name="p_qty" value="<?= (int)$fetch_cart['quantity']; ?>"
-                             class="w-28 px-4 py-3 rounded-xl bg-[rgba(255,255,255,0.08)] force-white border border-[rgba(255,255,255,0.18)] focus:outline-none focus:ring-2 focus:ring-accent/50">
-                      <button type="submit" name="update_qty"
-                              class="px-4 py-3 rounded-xl font-semibold glass-effect hover-glow force-white">
-                        Update
-                      </button>
+                      <input type="number" min="1" name="p_qty" value="<?= $qty; ?>" class="input w-28">
+                      <button type="submit" name="update_qty" class="btn btn-ghost">Update</button>
                     </div>
                   </div>
 
-                  <!-- Subtotal -->
                   <div class="sm:text-right">
-                    <p class="text-sm force-white mb-1">Sub Total</p>
-                    <p class="text-2xl font-extrabold force-white">
-                      Rs <?= number_format($sub_total, 2); ?>/-
-                    </p>
+                    <p class="text-sm text-neutral-600 mb-1">Sub Total</p>
+                    <p class="heading text-2xl">Rs <?= number_format($sub,2); ?>/-</p>
                   </div>
                 </div>
               </div>
@@ -278,59 +238,41 @@ $cart_items = $select_cart->fetchAll(PDO::FETCH_ASSOC);
       </div>
 
       <!-- Summary -->
-      <div class="glass-effect neon-glow rounded-3xl overflow-hidden border border-[rgba(210,180,140,0.28)] h-max">
-        <div class="px-4 py-3 bg-gradient-to-r from-primary/70 to-accent/60 backdrop-blur">
-          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-effect force-white text-sm font-bold border border-[rgba(255,255,255,0.25)]">
-            <i class="fas fa-receipt text-accent"></i> 
-            <span class="force-white">Order Summary</span>
-          </div>
+      <aside class="glass-effect shadow-soft allow-overflow h-max">
+        <div class="px-4 py-3 flex items-center justify-between">
+          <span class="badge"><i class="fa-solid fa-receipt"></i> Order Summary</span>
         </div>
-
         <div class="p-6">
-          <div class="rounded-2xl bg-[rgba(255,255,255,0.06)] p-4 space-y-2 border border-[rgba(255,255,255,0.12)]">
-            <div class="flex items-center justify-between">
-              <span class="force-white">Items</span>
-              <span class="force-white"><?= count($cart_items); ?></span>
+          <div class="rounded-2xl bg-white p-4 space-y-2 border border-neutral-200">
+            <div class="flex items-center justify-between text-neutral-700">
+              <span>Items</span><span><?= count($cart_items); ?></span>
             </div>
-            <div class="flex items-center justify-between">
-              <span class="force-white">Subtotal</span>
-              <span class="force-white">Rs <?= number_format($grand_total, 2); ?>/-</span>
+            <div class="flex items-center justify-between text-neutral-700">
+              <span>Subtotal</span><span>Rs <?= number_format($grand_total,2); ?>/-</span>
             </div>
-            <div class="flex items-center justify-between">
-              <span class="force-white">Shipping</span>
-              <span class="force-white">FREE</span>
+            <div class="flex items-center justify-between text-neutral-700">
+              <span>Shipping</span><span>FREE</span>
             </div>
-            <div class="pt-3 border-t border-white/10 flex items-center justify-between">
-              <span class="text-lg font-bold force-white">Grand Total</span>
-              <span class="text-lg font-extrabold force-white">Rs <?= number_format($grand_total, 2); ?>/-</span>
+            <div class="pt-3 border-top border-neutral-200 flex items-center justify-between" style="border-top:1px solid #eee;">
+              <span class="heading text-lg">Grand Total</span>
+              <span class="heading text-lg">Rs <?= number_format($grand_total,2); ?>/-</span>
             </div>
           </div>
 
           <div class="mt-6 grid gap-3">
-            <a href="shop.php"
-               class="text-center glass-effect rounded-xl py-3 font-semibold force-white hover-glow border border-[rgba(255,255,255,0.25)]">
-              Continue Shopping
-            </a>
-
-            <a href="cart.php?delete_all"
-               class="text-center glass-effect rounded-xl py-3 font-semibold text-accent hover-glow border border-accent/40 <?= ($grand_total > 0)?'':'pointer-events-none opacity-50'; ?>">
-              Delete All
-            </a>
-
-            <a href="checkout.php"
-               class="text-center bg-gradient-to-r from-primary to-accent force-white py-4 rounded-xl font-semibold hover-glow neon-glow <?= ($grand_total > 0)?'':'pointer-events-none opacity-50'; ?>">
-              Proceed to Checkout
-            </a>
+            <a href="shop.php" class="btn btn-ghost text-center">Continue Shopping</a>
+            <a href="cart.php?delete_all" class="btn btn-ghost text-center text-red-700 border border-red-300 hover:bg-red-50 <?= ($grand_total > 0)?'':'pointer-events-none opacity-50'; ?>">Delete All</a>
+            <a href="checkout.php" class="btn btn-primary text-center py-4 <?= ($grand_total > 0)?'':'pointer-events-none opacity-50'; ?>">Proceed to Checkout</a>
           </div>
         </div>
-      </div>
+      </aside>
     <?php else: ?>
-      <div class="lg:col-span-3 text-center py-16 glass-effect rounded-3xl border border-[rgba(255,255,255,0.18)]">
-        <i class="fas fa-box-open text-6xl text-white/30 mb-4"></i>
-        <p class="text-2xl force-white font-medium">Your cart is empty</p>
-        <a href="shop.php"
-           class="mt-6 inline-flex items-center justify-center bg-gradient-to-r from-primary to-accent force-white px-6 py-3 rounded-xl font-semibold hover-glow neon-glow">
-          <i class="fas fa-store mr-2"></i> Shop Now
+      <!-- Empty state -->
+      <div class="lg:col-span-3 text-center py-16 glass-effect shadow-soft">
+        <i class="fa-solid fa-box-open text-6xl text-neutral-400 mb-4"></i>
+        <p class="heading text-2xl">Your cart is empty</p>
+        <a href="shop.php" class="btn btn-primary mt-6 px-6 py-3">
+          <i class="fa-solid fa-store mr-2"></i> Shop Now
         </a>
       </div>
     <?php endif; ?>
@@ -339,12 +281,16 @@ $cart_items = $select_cart->fetchAll(PDO::FETCH_ASSOC);
 
 <?php include 'footer.php'; ?>
 
+<script>
+  // Auto-hide flash messages
+  document.querySelectorAll('.message').forEach(el=>{
+    setTimeout(()=>{
+      el.style.transform='translateX(100%)';
+      el.style.opacity='0';
+      setTimeout(()=>el.remove(),250);
+    }, 3000);
+  });
+</script>
 <script src="js/script.js"></script>
-
-<!-- Floating AI helper button like home (optional) -->
-<a href="#" class="ai-chat-widget" title="Need help?">
-  <i class="fas fa-comments text-2xl text-dark"></i>
-</a>
-
 </body>
 </html>
