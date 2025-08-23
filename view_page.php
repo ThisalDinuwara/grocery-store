@@ -4,288 +4,312 @@ session_start();
 
 $user_id = $_SESSION['user_id'] ?? null;
 if(!$user_id){
-  header('location:login.php');
-  exit;
+   header('location:login.php');
+   exit;
 }
 
-/* ---------- Wishlist ---------- */
+$message = [];
+
+/* ================= Helpers ================= */
+function getLivePromoPrice(PDO $conn, int $pid, float $basePrice): float {
+   // Guard
+   if (!is_finite($basePrice) || $basePrice < 0) $basePrice = 0.0;
+
+   $now = date('Y-m-d H:i:s');
+   $q = $conn->prepare("
+      SELECT promo_price, discount_percent
+      FROM promotions
+      WHERE product_id = ? AND active = 1
+        AND (starts_at IS NULL OR starts_at <= ?)
+        AND (ends_at   IS NULL OR ends_at   >= ?)
+      ORDER BY id DESC
+      LIMIT 1
+   ");
+   $q->execute([$pid, $now, $now]);
+   if ($row = $q->fetch(PDO::FETCH_ASSOC)) {
+      $hasPP   = isset($row['promo_price']) && $row['promo_price'] !== '' && is_numeric($row['promo_price']);
+      $hasDisc = isset($row['discount_percent']) && $row['discount_percent'] !== '' && is_numeric($row['discount_percent']);
+
+      if ($hasPP) {
+         $pp = (float)$row['promo_price'];
+         return ($pp >= 0 && $pp < $basePrice) ? $pp : $basePrice;
+      }
+      if ($hasDisc) {
+         $d = (float)$row['discount_percent'];
+         if ($d > 0 && $d <= 95) {
+            $calc = max(0.0, $basePrice * (1 - $d/100));
+            return ($calc < $basePrice - 0.0001) ? $calc : $basePrice;
+         }
+      }
+   }
+   return $basePrice;
+}
+
+/* ============= Wishlist (by pid) ============= */
 if(isset($_POST['add_to_wishlist'])){
-  $pid     = filter_var($_POST['pid']     ?? '', FILTER_SANITIZE_NUMBER_INT);
-  $p_name  = filter_var($_POST['p_name']  ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-  $p_price = filter_var($_POST['p_price'] ?? '', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-  $p_image = filter_var($_POST['p_image'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+   $pid = isset($_POST['pid']) ? (int)$_POST['pid'] : 0;
 
-  $check_wishlist_numbers = $conn->prepare("SELECT 1 FROM `wishlist` WHERE name = ? AND user_id = ?");
-  $check_wishlist_numbers->execute([$p_name, $user_id]);
+   $pstmt = $conn->prepare("SELECT id, name, price, image FROM products WHERE id = ? LIMIT 1");
+   $pstmt->execute([$pid]);
+   $prod = $pstmt->fetch(PDO::FETCH_ASSOC);
 
-  $check_cart_numbers = $conn->prepare("SELECT 1 FROM `cart` WHERE name = ? AND user_id = ?");
-  $check_cart_numbers->execute([$p_name, $user_id]);
+   if(!$prod){
+      $message[] = 'Product not found.';
+   }else{
+      $checkW = $conn->prepare("SELECT 1 FROM wishlist WHERE pid = ? AND user_id = ? LIMIT 1");
+      $checkW->execute([$pid, $user_id]);
 
-  if($check_wishlist_numbers->rowCount() > 0){
-    $message[] = 'already added to wishlist!';
-  }elseif($check_cart_numbers->rowCount() > 0){
-    $message[] = 'already added to cart!';
-  }else{
-    $insert_wishlist = $conn->prepare("INSERT INTO `wishlist`(user_id, pid, name, price, image) VALUES(?,?,?,?,?)");
-    $insert_wishlist->execute([$user_id, $pid, $p_name, $p_price, $p_image]);
-    $message[] = 'added to wishlist!';
-  }
+      $checkC = $conn->prepare("SELECT 1 FROM cart WHERE pid = ? AND user_id = ? LIMIT 1");
+      $checkC->execute([$pid, $user_id]);
+
+      if($checkW->rowCount() > 0){
+         $message[] = 'Already in wishlist!';
+      }elseif($checkC->rowCount() > 0){
+         $message[] = 'Already in cart!';
+      }else{
+         $ins = $conn->prepare("INSERT INTO wishlist(user_id, pid, name, price, image) VALUES(?,?,?,?,?)");
+         $ins->execute([$user_id, $prod['id'], $prod['name'], $prod['price'], $prod['image']]);
+         $message[] = 'Added to wishlist!';
+      }
+   }
 }
 
-/* ---------- Cart ---------- */
+/* ========= Add to CART with stock subtraction + promo price ========= */
 if(isset($_POST['add_to_cart'])){
-  $pid     = filter_var($_POST['pid']     ?? '', FILTER_SANITIZE_NUMBER_INT);
-  $p_name  = filter_var($_POST['p_name']  ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-  $p_price = filter_var($_POST['p_price'] ?? '', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-  $p_image = filter_var($_POST['p_image'] ?? '', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-  $p_qty   = max(1, (int)filter_var($_POST['p_qty'] ?? 1, FILTER_SANITIZE_NUMBER_INT));
+   $pid  = isset($_POST['pid']) && is_numeric($_POST['pid']) ? (int)$_POST['pid'] : 0;
+   $reqQ = isset($_POST['p_qty']) && is_numeric($_POST['p_qty']) ? (int)$_POST['p_qty'] : 1;
+   $reqQ = max(1, $reqQ);
 
-  $check_cart_numbers = $conn->prepare("SELECT 1 FROM `cart` WHERE name = ? AND user_id = ?");
-  $check_cart_numbers->execute([$p_name, $user_id]);
+   try{
+      $conn->beginTransaction();
 
-  if($check_cart_numbers->rowCount() > 0){
-    $message[] = 'already added to cart!';
-  }else{
-    $check_wishlist_numbers = $conn->prepare("SELECT 1 FROM `wishlist` WHERE name = ? AND user_id = ?");
-    $check_wishlist_numbers->execute([$p_name, $user_id]);
+      // Lock product row
+      $pstmt = $conn->prepare("SELECT id, name, price, image, quantity FROM products WHERE id = ? FOR UPDATE");
+      $pstmt->execute([$pid]);
+      $prod = $pstmt->fetch(PDO::FETCH_ASSOC);
 
-    if($check_wishlist_numbers->rowCount() > 0){
-      $delete_wishlist = $conn->prepare("DELETE FROM `wishlist` WHERE name = ? AND user_id = ?");
-      $delete_wishlist->execute([$p_name, $user_id]);
-    }
+      if(!$prod){
+         $conn->rollBack();
+         $message[] = 'Product not found.';
+      }else{
+         $avail = (int)($prod['quantity'] ?? 0);
+         if ($avail <= 0){
+            $conn->rollBack();
+            $message[] = 'Out of stock.';
+         }else{
+            $addQty   = min($reqQ, $avail);
+            $newStock = $avail - $addQty;
 
-    $insert_cart = $conn->prepare("INSERT INTO `cart`(user_id, pid, name, price, quantity, image) VALUES(?,?,?,?,?,?)");
-    $insert_cart->execute([$user_id, $pid, $p_name, $p_price, $p_qty, $p_image]);
-    $message[] = 'added to cart!';
-  }
+            $basePrice = (float)$prod['price'];
+            $unitPrice = getLivePromoPrice($conn, $pid, $basePrice);
+
+            // Lock/Upsert cart row
+            $csel = $conn->prepare("SELECT id, quantity FROM cart WHERE user_id = ? AND pid = ? FOR UPDATE");
+            $csel->execute([$user_id, $pid]);
+
+            if($row = $csel->fetch(PDO::FETCH_ASSOC)){
+               $newCartQty = (int)$row['quantity'] + $addQty;
+               $cupd = $conn->prepare("UPDATE cart SET quantity = ?, price = ?, name = ?, image = ? WHERE id = ?");
+               $cupd->execute([$newCartQty, $unitPrice, $prod['name'], $prod['image'], $row['id']]);
+            }else{
+               $cins = $conn->prepare("INSERT INTO cart (user_id, pid, name, price, quantity, image) VALUES (?,?,?,?,?,?)");
+               $cins->execute([$user_id, $prod['id'], $prod['name'], $unitPrice, $addQty, $prod['image']]);
+            }
+
+            // Subtract stock
+            $up = $conn->prepare("UPDATE products SET quantity = ? WHERE id = ?");
+            $up->execute([$newStock, $pid]);
+
+            $conn->commit();
+
+            if($addQty < $reqQ){
+               $message[] = "Only {$addQty} left; added {$addQty} to cart.";
+            }else{
+               $message[] = 'Added to cart!';
+            }
+         }
+      }
+   }catch(Exception $e){
+      if($conn->inTransaction()){ $conn->rollBack(); }
+      $message[] = 'Could not add to cart. Please try again.';
+   }
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quick View — Kandu Pinnawala</title>
+   <meta charset="UTF-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Quick View</title>
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            sand:   '#F7F4EF',
-            sand2:  '#EFE9DF',
-            sand3:  '#E6DFD3',
-            cocoa:  '#3E2723',
-            tan:    '#C89F6D',   // accents
-            bronze: '#A77A47',
-          },
-          fontFamily: {
-            inter: ['Inter','sans-serif'],
-            gaming:['Orbitron','monospace']
-          },
-          boxShadow: {
-            soft: '0 10px 30px rgba(105, 80, 50, .12)',
-            ring: '0 0 0 6px rgba(200,159,109,.22)'
-          }
-        }
+   <!-- Tailwind CDN -->
+   <script src="https://cdn.tailwindcss.com"></script>
+   <script>
+      tailwind.config = {
+         theme: {
+            extend: {
+               colors: {
+                  primary: '#8B4513',
+                  secondary: '#A0522D',
+                  accent: '#D2B48C',
+                  dark: '#3E2723',
+                  darker: '#1B0F0A'
+               },
+               fontFamily: {
+                  gaming: ['Orbitron', 'monospace'],
+                  inter: ['Inter', 'sans-serif']
+               }
+            }
+         }
       }
-    }
-  </script>
+   </script>
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+   <link rel="stylesheet" href="css/style.css">
+   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <style>
-    :root{
-      --bg1:#F7F4EF; --bg2:#EFE9DF; --bg3:#E6DFD3;
-      --ink:#2F241F; --ink-soft:#5f5149;
-      --tan:#C89F6D; --bronze:#A77A47;
-    }
-    *{box-sizing:border-box}
-    body{
-      font-family:'Inter',sans-serif;
-      color:var(--ink);
-      background:
-        radial-gradient(800px 300px at 15% 0%, rgba(200,159,109,.18), transparent 60%),
-        radial-gradient(800px 300px at 85% 100%, rgba(167,122,71,.14), transparent 60%),
-        linear-gradient(180deg,var(--bg1),var(--bg2) 45%, var(--bg3) 100%);
-      min-height:100vh;
-    }
+   <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#1B0F0A 0%,#3E2723 50%,#5D4037 100%);color:#fff;overflow-x:hidden}
+      .hero-bg{background:radial-gradient(circle at 20% 80%, rgba(139,69,19,.35) 0%, transparent 55%),radial-gradient(circle at 80% 20%, rgba(210,180,140,.35) 0%, transparent 55%),radial-gradient(circle at 40% 40%, rgba(160,82,45,.35) 0%, transparent 55%)}
+      .neon-glow{box-shadow:0 0 20px rgba(139,69,19,.5),0 0 40px rgba(160,82,45,.3),0 0 60px rgba(210,180,140,.2)}
+      .glass-effect{background:rgba(255,255,255,.08);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18)}
+      .hover-glow:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(139,69,19,.35);transition:.3s ease}
+      .gradient-text{background:linear-gradient(45deg,#8B4513,#A0522D,#D2B48C);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
-    /* hero bubbles */
-    .bubble{filter:blur(24px); opacity:.6; border-radius:9999px}
-    .floating{animation:floating 6s ease-in-out infinite}
-    @keyframes floating{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-
-    /* glass card */
-    .card{
-      background:rgba(255,255,255,.75);
-      backdrop-filter: blur(10px);
-      border:1px solid rgba(120,100,80,.18);
-      box-shadow:0 10px 30px rgba(105, 80, 50, .12);
-      border-radius:22px;
-    }
-
-    .badge{
-      background:linear-gradient(135deg,var(--tan),var(--bronze));
-      color:#fff; border:1px solid rgba(255,255,255,.6);
-      box-shadow:0 8px 22px rgba(167,122,71,.25);
-    }
-
-    .btn-primary{
-      background:linear-gradient(135deg,var(--tan),var(--bronze));
-      color:#fff; font-weight:800;
-      box-shadow:0 12px 26px rgba(167,122,71,.25);
-      transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
-    }
-    .btn-primary:hover{ transform:translateY(-1px); filter:brightness(1.03); }
-    .btn-secondary{
-      background:#fff; color:var(--ink);
-      border:1px solid rgba(120,100,80,.25); font-weight:700;
-    }
-    .btn-secondary:hover{ box-shadow:0 10px 22px rgba(105,80,50,.12); }
-
-    .qty{ border:1px solid rgba(120,100,80,.25); background:#fff; }
-    .qty:focus{ outline:none; box-shadow:0 0 0 5px rgba(200,159,109,.22); }
-
-    .message{
-      position:fixed; top:20px; right:20px;
-      background:linear-gradient(135deg,var(--tan),var(--bronze));
-      color:#fff; padding:12px 16px; border-radius:14px;
-      border:1px solid rgba(255,255,255,.6); z-index:1000;
-      box-shadow:0 16px 40px rgba(167,122,71,.28); font-weight:700;
-      animation:msg .28s ease-out;
-    }
-    @keyframes msg{ from{ transform:translateX(40px); opacity:0 } to{ transform:translateX(0); opacity:1 } }
-  </style>
+      .product-card{background:linear-gradient(180deg,rgba(62,39,35,.92),rgba(62,39,35,.84));border:1px solid rgba(210,180,140,.28);border-radius:22px;overflow:hidden;transition:transform .35s ease,box-shadow .35s ease,border-color .35s ease}
+      .product-card:hover{transform:translateY(-8px);border-color:rgba(210,180,140,.55);box-shadow:0 22px 48px rgba(160,82,45,.35)}
+      .price-badge{font-size:1.05rem;letter-spacing:.3px;padding:.55rem .95rem;border:1px solid rgba(255,255,255,.18)}
+      .product-title{font-weight:800;letter-spacing:.2px;color:#FFF7EE;text-shadow:0 1px 0 rgba(0,0,0,.55);line-height:1.25}
+      .qty{background:rgba(255,255,255,.08)}
+      .qty:focus{outline:none;box-shadow:0 0 0 3px rgba(210,180,140,.35)}
+      .pill{background:#fef3c7;color:#92400e;border:1px solid #f59e0b}
+      .badge-oos{background:#fee2e2 !important;color:#991b1b !important;border-color:#ef4444 !important}
+      .old-price{color:#e2e8f0;opacity:.98;text-decoration:line-through;font-weight:600;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+   </style>
 </head>
 <body>
-
 <?php include 'header.php'; ?>
 
-<!-- Hero -->
-<section class="relative overflow-hidden">
-  <div class="absolute -top-10 -left-10 w-80 h-80 bg-[rgba(200,159,109,.22)] bubble floating"></div>
-  <div class="absolute -bottom-16 -right-8 w-96 h-96 bg-[rgba(167,122,71,.18)] bubble floating" style="animation-delay:.8s"></div>
-
-  <div class="container mx-auto px-6 lg:px-12 py-16 md:py-20 text-center relative">
-    <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
-      <span class="font-gaming bg-gradient-to-r from-tan to-bronze bg-clip-text text-transparent">QUICK</span>
-      <span class="text-cocoa">VIEW</span>
-    </h1>
-    <div class="h-[6px] w-32 rounded-full mx-auto mt-6 mb-4 bg-gradient-to-r from-tan to-bronze"></div>
-    <p class="text-lg md:text-xl text-[color:var(--ink-soft)] max-w-3xl mx-auto">
-      Explore traditional Sri Lankan handicrafts with detailed views and instant shopping options.
-    </p>
+<!-- Hero / Header -->
+<section class="relative min-h-[35vh] md:min-h-[45vh] flex items-center justify-center overflow-hidden hero-bg">
+  <div class="container mx-auto px-6 lg:px-12 relative z-10 text-center">
+     <h1 class="text-5xl lg:text-7xl font-bold leading-tight mb-4">
+       <span class="gradient-text font-gaming">QUICK</span> <span class="text-white">VIEW</span>
+     </h1>
+     <div class="h-1 w-28 bg-gradient-to-r from-[#8B4513] to-[#D2B48C] rounded-full mx-auto mb-6"></div>
+     <p class="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto">See the details you need and add to cart instantly.</p>
   </div>
 </section>
 
-<section class="py-10 md:py-16">
+<section id="quick-view" class="py-16">
   <div class="container mx-auto px-6 lg:px-12">
     <?php
       $pid = isset($_GET['pid']) ? (int)$_GET['pid'] : 0;
-      $select_products = $conn->prepare("SELECT * FROM `products` WHERE id = ? LIMIT 1");
-      $select_products->execute([$pid]);
+      $stmt = $conn->prepare("SELECT * FROM products WHERE id = ? LIMIT 1");
+      $stmt->execute([$pid]);
+      if($stmt->rowCount() > 0){
+        $p = $stmt->fetch(PDO::FETCH_ASSOC);
+        $qty     = (int)($p['quantity'] ?? 0);
+        $inStock = $qty > 0;
 
-      if($select_products->rowCount() > 0){
-        $p = $select_products->fetch(PDO::FETCH_ASSOC);
+        $basePrice = (float)$p['price'];
+        $livePrice = getLivePromoPrice($conn, $pid, $basePrice);
+        $isDiscount= $livePrice < $basePrice - 0.0001;
     ?>
-    <form action="" method="POST" class="max-w-5xl mx-auto">
-      <div class="card overflow-hidden">
-        <!-- Header -->
-        <div class="px-5 md:px-7 py-4 flex items-center justify-between">
-          <div class="badge inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm md:text-base">
-            <i class="fa-solid fa-tag"></i>
-            Rs <?= number_format((float)$p['price'], 2) ?>/-
+    <form action="" method="POST" class="group max-w-4xl mx-auto">
+      <!-- Hidden first so any submit posts the pid -->
+      <input type="hidden" name="pid" value="<?= (int)$p['id']; ?>">
+
+      <div class="product-card relative neon-glow">
+        <!-- top bar -->
+        <div class="px-4 py-3 flex items-center justify-between">
+          <div class="inline-flex items-center gap-2 price-badge rounded-full bg-gradient-to-r from-[#8B4513] to-[#D2B48C] text-white">
+            <i class="fas fa-tag"></i>
+            <?php if($isDiscount): ?>
+              <span class="font-semibold">Rs <?= number_format($livePrice,2); ?></span>
+              <span class="old-price ml-2 text-sm">Was Rs <?= number_format($basePrice,2); ?></span>
+            <?php else: ?>
+              <span class="font-semibold">Rs <?= number_format($basePrice,2); ?></span>
+            <?php endif; ?>
           </div>
-          <a href="shop.php" class="w-10 h-10 rounded-full grid place-items-center border border-[rgba(120,100,80,.25)] bg-white hover:shadow-soft transition" aria-label="Back to shop">
-            <i class="fa-solid fa-xmark text-[color:var(--ink)] text-lg"></i>
-          </a>
+
+          <div class="flex items-center gap-2">
+            <?php if(!$inStock): ?>
+              <span class="pill badge-oos text-xs px-2 py-1 rounded border">Out of stock</span>
+            <?php elseif($qty < 10): ?>
+              <span class="pill text-xs px-2 py-1 rounded border">Only <?= $qty; ?> left</span>
+            <?php endif; ?>
+            <a href="shop.php" class="w-10 h-10 glass-effect rounded-full flex items-center justify-center text-white hover-glow" aria-label="Back">
+              <i class="fas fa-times"></i>
+            </a>
+          </div>
         </div>
 
         <!-- Image -->
-        <div class="px-5 md:px-7">
-          <div class="rounded-2xl overflow-hidden border border-[rgba(120,100,80,.25)]">
-            <img src="uploaded_img/<?= htmlspecialchars($p['image']) ?>"
-                 alt="<?= htmlspecialchars($p['name']) ?>"
-                 class="w-full h-auto block transition-transform duration-500 hover:scale-[1.02]"
-                 onerror="this.src='uploaded_img/placeholder.png'">
-          </div>
+        <div class="aspect-square overflow-hidden">
+          <img src="uploaded_img/<?=
+              htmlspecialchars($p['image']); ?>"
+              alt="<?= htmlspecialchars($p['name']); ?>"
+              class="w-full h-full object-cover"
+              onerror="this.src='uploaded_img/placeholder.png';">
         </div>
 
-        <!-- Content -->
+        <!-- Info -->
         <div class="p-6 md:p-8">
-          <h2 class="text-2xl md:text-3xl font-extrabold mb-3"><?= htmlspecialchars($p['name']) ?></h2>
+          <h3 class="product-title text-2xl mb-3"><?= htmlspecialchars($p['name']); ?></h3>
+
           <?php if(!empty($p['details'])): ?>
-            <p class="text-[color:var(--ink-soft)] leading-relaxed mb-6">
-              <?= nl2br(htmlspecialchars($p['details'])) ?>
-            </p>
+          <p class="text-gray-200 mb-6 leading-relaxed"><?= nl2br(htmlspecialchars($p['details'])); ?></p>
           <?php endif; ?>
 
-          <!-- Hidden inputs -->
-          <input type="hidden" name="pid" value="<?= (int)$p['id'] ?>">
-          <input type="hidden" name="p_name" value="<?= htmlspecialchars($p['name']) ?>">
-          <input type="hidden" name="p_price" value="<?= htmlspecialchars($p['price']) ?>">
-          <input type="hidden" name="p_image" value="<?= htmlspecialchars($p['image']) ?>">
+          <!-- Quantity -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-200 mb-2">Quantity</label>
+            <input
+               type="number"
+               name="p_qty"
+               min="1"
+               <?= $inStock ? 'value="1"' : 'value="0"'; ?>
+               <?= $inStock ? 'max="'.$qty.'"' : 'disabled'; ?>
+               class="qty w-32 px-4 py-3 glass-effect rounded-xl text-white text-center">
+          </div>
 
-          <div class="grid md:grid-cols-[180px_1fr] gap-4 md:gap-6 items-end">
-            <div>
-              <label class="block text-sm font-semibold mb-2 text-[color:var(--ink-soft)]">Quantity</label>
-              <input type="number" min="1" value="1" name="p_qty" class="qty w-40 px-4 py-3 rounded-xl text-center font-semibold">
-            </div>
-            <div class="grid sm:grid-cols-2 gap-3">
-              <button type="submit" name="add_to_cart" class="btn-primary rounded-xl py-3.5 text-base">
-                <i class="fa-solid fa-cart-shopping mr-2"></i> Add to Cart
-              </button>
-              <button type="submit" name="add_to_wishlist" class="btn-secondary rounded-xl py-3.5 text-base">
-                <i class="fa-solid fa-heart mr-2"></i> Add to Wishlist
-              </button>
-            </div>
+          <!-- Actions -->
+          <div class="grid sm:grid-cols-2 gap-3">
+            <button type="submit" name="add_to_cart"
+                    class="w-full bg-gradient-to-r from-[#8B4513] to-[#D2B48C] text-white py-4 rounded-xl font-semibold hover-glow transition"
+                    <?= $inStock ? '' : 'disabled style="opacity:.6;cursor:not-allowed"'; ?>>
+              <i class="fas fa-shopping-cart mr-2"></i> <?= $inStock ? 'Add to Cart' : 'Unavailable' ?>
+            </button>
+
+            <button type="submit" name="add_to_wishlist"
+                    class="w-full glass-effect text-white py-4 rounded-xl font-semibold hover-glow">
+              <i class="fas fa-heart mr-2"></i> Add to Wishlist
+            </button>
           </div>
         </div>
       </div>
     </form>
-    <?php } else { ?>
-      <div class="max-w-lg mx-auto text-center card p-10">
-        <i class="fa-solid fa-box-open text-6xl mb-4 text-[color:var(--bronze)]"></i>
-        <h3 class="text-2xl font-extrabold mb-2">No Product Found</h3>
-        <p class="text-[color:var(--ink-soft)] mb-6">The requested product could not be found in our collection.</p>
-        <a href="shop.php" class="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl">
-          <i class="fa-solid fa-store"></i> Browse Our Collection
-        </a>
-      </div>
-    <?php } ?>
+    <?php
+      } else {
+        echo '<div class="text-center">
+                <div class="glass-effect p-12 rounded-3xl max-w-md mx-auto">
+                  <i class="fas fa-box-open text-6xl" style="color:#CD853F"></i>
+                  <p class="text-2xl text-gray-200 font-medium mt-4">No products found!</p>
+                  <a href="shop.php"
+                     class="mt-6 inline-flex items-center justify-center bg-gradient-to-r from-[#8B4513] to-[#D2B48C] text-white px-6 py-3 rounded-xl font-semibold hover-glow transition">
+                    <i class="fas fa-store mr-2"></i> Back to Shop
+                  </a>
+                </div>
+              </div>';
+      }
+    ?>
   </div>
 </section>
 
 <?php include 'footer.php'; ?>
-
 <script src="js/script.js"></script>
-
-<?php
-if(!empty($message)){
-  foreach($message as $m){
-    echo '<div class="message"><i class="fa-solid fa-circle-info mr-2"></i>'.htmlspecialchars(ucfirst($m)).'</div>';
-  }
-}
-?>
-
-<script>
-  // auto-hide toasts
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.message').forEach(el => {
-      setTimeout(() => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateX(16px)';
-        setTimeout(() => el.remove(), 260);
-      }, 3500);
-    });
-  });
-</script>
-
 </body>
 </html>
