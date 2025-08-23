@@ -101,18 +101,79 @@ if(isset($message)){
       </div>
       
       <div class="flex items-center space-x-4">
+         <!-- Notifications -->
          <div class="relative">
-            <button class="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative">
+            <button id="btnNotifications" class="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative">
                <i class="fas fa-bell text-lg"></i>
                <span class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">3</span>
             </button>
+
+            <!-- Notifications dropdown -->
+            <div id="menuNotifications"
+                 class="invisible opacity-0 pointer-events-none absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden transition
+                        data-[open=true]:visible data-[open=true]:opacity-100 data-[open=true]:pointer-events-auto"
+                 role="menu" aria-labelledby="btnNotifications">
+               <div class="px-4 py-3 bg-gray-50 border-b">
+                  <div class="font-semibold">Notifications</div>
+                  <div class="text-xs text-gray-500">Orders & messages</div>
+               </div>
+
+               <a href="admin_orders.php" class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50">
+                  <span class="mt-0.5 inline-flex items-center justify-center w-8 h-8 rounded bg-yellow-100">
+                     <i class="fa-solid fa-clock text-yellow-600"></i>
+                  </span>
+                  <div class="flex-1">
+                     <div class="text-sm"><span class="font-medium">Pending Orders</span></div>
+                     <div class="text-xs text-gray-500">Review and complete</div>
+                  </div>
+               </a>
+
+               <a href="admin_contacts.php" class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50">
+                  <span class="mt-0.5 inline-flex items-center justify-center w-8 h-8 rounded bg-blue-100">
+                     <i class="fa-regular fa-envelope text-blue-600"></i>
+                  </span>
+                  <div class="flex-1">
+                     <div class="text-sm"><span class="font-medium">Messages</span></div>
+                     <div class="text-xs text-gray-500">Open inbox</div>
+                  </div>
+               </a>
+
+               <div class="px-4 py-3 bg-gray-50 border-t text-right">
+                  <a class="text-sm text-blue-600 hover:underline" href="admin_orders.php">View all</a>
+               </div>
+            </div>
          </div>
          
+         <!-- Profile -->
          <div class="relative">
-            <button class="flex items-center space-x-2 p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100">
-               <img src="uploaded_img/<?= $fetch_profile['image']; ?>" alt="Profile" class="w-8 h-8 rounded-full">
+            <button id="btnProfile" class="flex items-center space-x-2 p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+               <img
+                  src="uploaded_img/<?= htmlspecialchars($fetch_profile['image']); ?>"
+                  onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($fetch_profile['name'] ?? 'Admin') ?>&background=0D8ABC&color=fff';"
+                  alt="Profile" class="w-8 h-8 rounded-full object-cover">
                <i class="fas fa-chevron-down text-xs"></i>
             </button>
+
+            <!-- Profile dropdown -->
+            <div id="menuProfile"
+                 class="invisible opacity-0 pointer-events-none absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden transition
+                        data-[open=true]:visible data-[open=true]:opacity-100 data-[open=true]:pointer-events-auto"
+                 role="menu" aria-labelledby="btnProfile">
+               <div class="px-4 py-3 bg-gray-50 border-b">
+                  <div class="font-semibold text-sm truncate"><?= htmlspecialchars($fetch_profile['name'] ?? 'Administrator') ?></div>
+                  <div class="text-xs text-gray-500 truncate"><?= htmlspecialchars($fetch_profile['email'] ?? '') ?></div>
+               </div>
+               <a href="admin_update_profile.php" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50" role="menuitem">
+                  <i class="fa-regular fa-user text-gray-600"></i><span class="text-sm">My Profile</span>
+               </a>
+               <a href="admin_change_password.php" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50" role="menuitem">
+                  <i class="fa-solid fa-key text-gray-600"></i><span class="text-sm">Change Password</span>
+               </a>
+               <div class="border-t"></div>
+               <a href="logout.php" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-red-600" role="menuitem">
+                  <i class="fa-solid fa-right-from-bracket"></i><span class="text-sm">Logout</span>
+               </a>
+            </div>
          </div>
       </div>
    </div>
@@ -126,7 +187,6 @@ if(isset($message)){
 document.getElementById('sidebar-toggle')?.addEventListener('click', function() {
    const sidebar = document.querySelector('.fixed.inset-y-0.left-0');
    const overlay = document.getElementById('sidebar-overlay');
-   
    sidebar.classList.toggle('-translate-x-full');
    overlay.classList.toggle('hidden');
 });
@@ -134,8 +194,35 @@ document.getElementById('sidebar-toggle')?.addEventListener('click', function() 
 document.getElementById('sidebar-overlay')?.addEventListener('click', function() {
    const sidebar = document.querySelector('.fixed.inset-y-0.left-0');
    const overlay = document.getElementById('sidebar-overlay');
-   
    sidebar.classList.add('-translate-x-full');
    overlay.classList.add('hidden');
 });
+
+// Dropdowns: toggle + click-outside + ESC
+(function () {
+  const pairs = [
+    { btn: 'btnNotifications', menu: 'menuNotifications' },
+    { btn: 'btnProfile',       menu: 'menuProfile' }
+  ];
+  const map = new Map();
+  const setOpen = (el, open) => el && (el.dataset.open = open ? 'true' : 'false');
+
+  pairs.forEach(({btn, menu}) => {
+    const b = document.getElementById(btn);
+    const m = document.getElementById(menu);
+    if (!b || !m) return;
+    map.set(b, m);
+    setOpen(m, false);
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      map.forEach((om, ob) => { if (ob !== b) setOpen(om, false); });
+      const open = m.dataset.open === 'true';
+      setOpen(m, !open);
+      b.setAttribute('aria-expanded', String(!open));
+    });
+  });
+
+  document.addEventListener('click', () => map.forEach(m => setOpen(m, false)));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') map.forEach(m => setOpen(m, false)); });
+})();
 </script>
